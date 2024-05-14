@@ -1,8 +1,9 @@
-export async function getClips(title, clipLength, fileName) {
+export async function getClips(title, clipLength, file) {
   const formData = new FormData();
   formData.append("title", title);
   formData.append("clipLength", clipLength);
-  formData.append("fileName", fileName);
+  console.log("file", file);
+  formData.append("file", file); //is this actually a File object?
 
   try {
     const response = await fetch("http://localhost:5000/api/clips", {
@@ -14,8 +15,11 @@ export async function getClips(title, clipLength, fileName) {
       throw new Error("Network response was not ok");
     }
 
-    return await response;
+    const responseData = await response.json();
+    console.log("Response data:", responseData);
+    return { status: response.status, data: responseData };
   } catch (error) {
-    console.error("Error submitting API request:", error);
+    console.error("Error parsing response:", error);
+    return { status: "network-error", error }; //returns network-error as status code and error as data
   }
 }

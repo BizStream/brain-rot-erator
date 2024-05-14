@@ -6,7 +6,7 @@ import { getClips } from "./lib/pythonService";
 export default function Home() {
   const [title, setTitle] = useState("");
   const [clipLength, setClipLength] = useState(5);
-  const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState("");
 
   const fileInputRef = useRef(null);
 
@@ -16,10 +16,14 @@ export default function Home() {
     setTitle("");
     setClipLength(5);
 
-    const answerRes = await getClips(title, clipLength, fileName);
+    const answerRes = await getClips(title, clipLength, file);
+
+    console.log("Answer response:", answerRes.data);
 
     if (answerRes.status === 200) {
       console.log("Success");
+    } else if (answerRes.status === "network-error") {
+      console.log("Network error:", answerRes.error);
     } else {
       console.log("Error");
     }
@@ -28,12 +32,12 @@ export default function Home() {
   const handleAttachClick = (e) => {
     e.preventDefault();
     fileInputRef.current.click();
-    console.log("Attach clicked", fileName);
+    console.log("Attach clicked", file);
   };
 
   const handleFileChange = (files) => {
-    const file = files[0];
-    setFileName(file.name);
+    const fileInput = files[0];
+    setFile(fileInput);
     console.log("File changed", file.name);
   };
 
@@ -73,7 +77,7 @@ export default function Home() {
                   onChange={(e) => handleFileChange(e.target.files)}
                 ></input>
                 <p className="flex items-center px-4 text-blue-500">
-                  {fileName}
+                  {file.name}
                 </p>
               </div>
 
