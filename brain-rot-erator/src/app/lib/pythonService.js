@@ -5,7 +5,7 @@ export async function getClips(title, clipLength, fileName) {
   formData.append("fileName", fileName);
 
   try {
-    const response = await fetch("http://localhost:3000/api/clips", {
+    const response = await fetch("http://localhost:5000/api/clips", {
       method: "POST",
       body: formData,
     });
