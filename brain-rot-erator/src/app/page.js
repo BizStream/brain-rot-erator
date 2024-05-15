@@ -12,13 +12,11 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", title, clipLength);
+
     setTitle("");
     setClipLength(5);
 
     const answerRes = await getClips(title, clipLength, file);
-
-    console.log("Answer response:", answerRes.data);
 
     if (answerRes.status === 200) {
       console.log("Success");
@@ -32,13 +30,11 @@ export default function Home() {
   const handleAttachClick = (e) => {
     e.preventDefault();
     fileInputRef.current.click();
-    console.log("Attach clicked", file);
   };
 
   const handleFileChange = (files) => {
     const fileInput = files[0];
     setFile(fileInput);
-    console.log("File changed", file.name);
   };
 
   return (

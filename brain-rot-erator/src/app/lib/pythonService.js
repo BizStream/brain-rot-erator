@@ -2,7 +2,6 @@ export async function getClips(title, clipLength, file) {
   const formData = new FormData();
   formData.append("title", title);
   formData.append("clipLength", clipLength);
-  console.log("file", file);
   formData.append("file", file); //is this actually a File object?
 
   try {
