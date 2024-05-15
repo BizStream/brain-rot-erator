@@ -2,16 +2,25 @@
 import React, { useRef, useState } from "react";
 import Image from "next/image";
 import { getClips } from "./lib/pythonService";
+import toast from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 
 export default function Home() {
   const [title, setTitle] = useState("");
   const [clipLength, setClipLength] = useState(5);
   const [file, setFile] = useState("");
+  const [response, setResponse] = useState("");
 
   const fileInputRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (title === "" || file === "") {
+      toast.error("Please fill out all fields");
+      setResponse("");
+      return;
+    }
 
     setTitle("");
     setClipLength(5);
@@ -20,6 +29,7 @@ export default function Home() {
 
     if (answerRes.status === 200) {
       console.log("Success");
+      setResponse(answerRes.data);
     } else if (answerRes.status === "network-error") {
       console.log("Network error:", answerRes.error);
     } else {
@@ -39,6 +49,7 @@ export default function Home() {
 
   return (
     <div className="">
+      <Toaster></Toaster>
       <div className="flex max-w-900 mx-auto w-full justify-center">
         <div className="flex flex-col">
           <p className="flex justify-center my-4 font-bold">Brain Rot-erator</p>
@@ -71,6 +82,7 @@ export default function Home() {
                   ref={fileInputRef}
                   style={{ display: "none" }}
                   onChange={(e) => handleFileChange(e.target.files)}
+                  accept="video/mp4,video/x-m4v,video/*"
                 ></input>
                 <p className="flex items-center px-4 text-blue-500">
                   {file.name}
@@ -98,6 +110,13 @@ export default function Home() {
             >
               Submit
             </button>
+
+            <div
+              className="bg-gray-700 rounded px-2 py-2 max-w-[400px]"
+              style={{ display: response == "" ? "none" : "flex" }}
+            >
+              {response.message}
+            </div>
           </form>
         </div>
       </div>
