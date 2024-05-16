@@ -117,6 +117,12 @@ export default function Home() {
             >
               {response.message}
             </div>
+            <video
+              className="w-[250px]"
+              src="/asdf-1.mp4"
+              type="mp4"
+              autoPlay
+            ></video>
           </form>
         </div>
       </div>
