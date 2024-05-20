@@ -3,6 +3,7 @@ from flask_cors import CORS
 from moviepy.editor import VideoFileClip, AudioFileClip
 from werkzeug.utils import secure_filename
 import os
+from flask import send_from_directory
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
@@ -33,13 +34,14 @@ def process_data():
     file.save(filepath)
 
     # Create the output folder if it doesn't exist
-    output_folder = os.path.join("public")
+    output_folder = os.path.join("public/videos")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     clipSegmentNum = 1
     clipCurrentStart = 0
     # audio = AudioFileClip(filepath)
+
     movie = VideoFileClip(filepath)
     total_duration = movie.duration
     print(total_duration)
@@ -94,6 +96,11 @@ def process_data():
         ),
         200,
     )
+
+
+@app.route("/api/test", methods=["GET"])
+def get_clips():
+    return "Hello, World!"
 
 
 if __name__ == "__main__":
