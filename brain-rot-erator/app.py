@@ -3,6 +3,7 @@ from flask_cors import CORS
 from moviepy.editor import VideoFileClip, AudioFileClip
 from werkzeug.utils import secure_filename
 import os
+from flask import send_from_directory
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
@@ -109,6 +110,11 @@ def delete_clips():
         except Exception as e:
             print(e)
             return jsonify({"status": "error", "message": "Error deleting clips."})
+
+
+@app.route("/api/clips", methods=["GET"])
+def get_clips():
+    return "Hello, World!"
 
 
 if __name__ == "__main__":
