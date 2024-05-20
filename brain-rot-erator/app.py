@@ -48,7 +48,6 @@ def process_data():
     clipCurrentStart = 0
     movie = VideoFileClip(filepath)
     total_duration = movie.duration
-    print(total_duration)
 
     # loop through the video and create clips of the specified length
     while clipCurrentStart < total_duration:
@@ -93,17 +92,17 @@ def process_data():
 
 @app.route("/api/videos", methods=["GET"])
 def list_clip_urls():
-    print("Listing clip URLs")
+
     output_folder = os.path.join("temporary_folder", "clips")
     clip_urls = []
     for filename in os.listdir(output_folder):
         clip_urls.append(f"http://localhost:5000/api/videos/{filename}")
 
-    print(clip_urls)
     return jsonify(clip_urls)
 
 
 # TODO: WHAT is hitting this endpoint?
+# TODO: And WHY is each clip being called twice?
 @app.route("/api/videos/<filename>", methods=["GET"])
 def get_clip(filename):
     output_folder = os.path.join("temporary_folder", "clips")

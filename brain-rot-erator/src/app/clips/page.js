@@ -12,13 +12,20 @@ export default function ClipsPage() {
   useEffect(() => {
     toast((t) => (
       <span>
-        <b>WARNING:</b> Your clips will be deleted in ONE HOUR if you don't
+        <b>WARNING: </b>your clips will be DELETED in ONE HOUR if you don't
         download them
+        <button
+          className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
+          onClick={() => {
+            toast.dismiss(t.id);
+          }}
+        >
+          Dismiss
+        </button>
       </span>
     ));
     const fetchVideoUrls = async () => {
-      const response = await fetch("http://localhost:5000/api/videos"); // Ensure the Flask server is running on port 5000
-      console.log("Response:", response);
+      const response = await fetch("http://localhost:5000/api/videos");
       if (response.ok) {
         const videoUrls = await response.json();
         setVideos(videoUrls);
@@ -30,58 +37,8 @@ export default function ClipsPage() {
     fetchVideoUrls();
   }, []);
 
-  const handleClipWatched = async (filename) => {
-    // const response = await fetch("http://localhost:5000/api/delete_clips", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ filename }),
-    // });
-    // console.log("Response from deletion:", response);
-    // if (response.ok) {
-    //   console.log("Video deleted");
-    // } else {
-    //   toast.error("Error deleting video");
-    // }
-  };
-
   const handleReturnClick = (e) => {
     e.preventDefault();
-
-    // After videos are deleted for the first time (length === 0), the next time you come to this page it redirects you home BUT TODO: the toast still pops up for a split second
-    if (videos.length === 0) {
-      router.push("/");
-    } else {
-      toast((t) => (
-        <span>
-          Are you sure? <b className="text-2xl">Your clips will be DELETED</b>
-          <button
-            className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
-            onClick={() => {
-              toast.dismiss(t.id);
-              handleWarningClick();
-            }}
-          >
-            Confirm
-          </button>
-        </span>
-      ));
-    }
-  };
-
-  const handleWarningClick = () => {
-    // const deleteClips = async () => {
-    //   const response = await fetch("/api/clips", {
-    //     method: "DELETE",
-    //   });
-    //   if (response.ok) {
-    //     router.push("/");
-    //   } else {
-    //     toast.error("Error deleting clips");
-    //   }
-    // };
-    // deleteClips();
     router.push("/");
   };
 
@@ -94,8 +51,6 @@ export default function ClipsPage() {
         return prevSelected.filter((i) => i !== index);
       }
     });
-
-    console.log("Selected:", selected);
   };
 
   const handleDownloadSelected = () => {
@@ -149,9 +104,6 @@ export default function ClipsPage() {
               <source src={videos[videoName]} type="video/mp4" />
               Your browser doesn't support the video tag.
             </video>
-            <button onClick={() => handleClipWatched(videos[videoName])}>
-              Mark as watched
-            </button>
           </div>
         ))}
       </ul>
