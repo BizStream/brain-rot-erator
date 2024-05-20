@@ -21,6 +21,7 @@
 *.pem
 /public
 /temporary_folder
+/temporary_folder/*
 
 # debug
 npm-debug.log*
