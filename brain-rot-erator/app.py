@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from moviepy.editor import VideoFileClip, AudioFileClip
 from werkzeug.utils import secure_filename
@@ -33,13 +33,12 @@ def process_data():
     file.save(filepath)
 
     # Create the output folder if it doesn't exist
-    output_folder = os.path.join("public")
+    output_folder = os.path.join("temporary_folder", "clips")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     clipSegmentNum = 1
     clipCurrentStart = 0
-    # audio = AudioFileClip(filepath)
     movie = VideoFileClip(filepath)
     total_duration = movie.duration
     print(total_duration)
@@ -56,16 +55,6 @@ def process_data():
         myClip = movie.subclip(clipCurrentStart, clipEnd)
         myClip.write_videofile(output_video_path, codec="libx264", audio=False)
 
-        # Process audio
-        # if clipSegmentNum == 1:
-        #     myAudio = audio.subclip(clipCurrentStart, clipEnd)
-        #     print("First segment")
-        # else:
-        #     myAudio = audio.subclip(clipCurrentStart)
-        #     print("Not first segment")
-        # myAudio.write_audiofile(output_video_path.replace(".mp4", ".mp3"))
-
-        # myAudio.close()
         myClip.close()
 
         print(
@@ -75,10 +64,8 @@ def process_data():
         clipSegmentNum += 1
 
     movie.close()
-    # audio.close()
 
     # delete the file after processing
-
     os.remove(filepath)
 
     # # Process data here
@@ -94,6 +81,34 @@ def process_data():
         ),
         200,
     )
+
+
+@app.route("/api/videos", methods=["GET"])  # TODO: is this route right?
+def list_clip_urls():
+    output_folder = os.path.join("temporary_folder", "clips")
+    clip_urls = []
+    for filename in os.listdir(output_folder):
+        clip_urls.append(f"http://localhost:5000/api/clips/{filename}")  # or 5000?
+
+    return jsonify(clip_urls)
+
+
+@app.route("/api/videos/<filename>", methods=["GET"])
+def get_clip(filename):
+    output_folder = os.path.join("temporary_folder", "clips")
+    return send_from_directory(output_folder, filename)
+
+
+@app.route("/api/delete_clips", methods=["POST"])
+def delete_clips():
+    output_folder = os.path.join("temporary_folder", "clips")
+    for filename in os.listdir(output_folder):
+        try:
+            os.remove(os.path.join(output_folder, filename))
+            return jsonify({"status": "success", "message": "Clips deleted."})
+        except Exception as e:
+            print(e)
+            return jsonify({"status": "error", "message": "Error deleting clips."})
 
 
 if __name__ == "__main__":
