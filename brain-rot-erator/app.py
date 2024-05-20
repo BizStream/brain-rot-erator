@@ -98,7 +98,7 @@ def process_data():
     )
 
 
-@app.route("/api/test", methods=["GET"])
+@app.route("/api/clips", methods=["GET"])
 def get_clips():
     return "Hello, World!"
 

@@ -12,7 +12,7 @@ export default function ClipsPage() {
 
   useEffect(() => {
     const fetchVideos = async () => {
-      const response = await fetch("/api/test");
+      const response = await fetch("/api/clips");
 
       const data = await response.json();
       setVideos(data);
@@ -29,7 +29,7 @@ export default function ClipsPage() {
       router.push("/");
     } else {
       toast((t) => (
-        <span className="">
+        <span>
           Are you sure? <b className="text-2xl">Your clips will be DELETED</b>
           <button
             className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
@@ -47,12 +47,14 @@ export default function ClipsPage() {
 
   const handleWarningClick = () => {
     const deleteClips = async () => {
-      const response = await fetch("/api/test", {
+      const response = await fetch("/api/clips", {
         method: "DELETE",
       });
 
       if (response.ok) {
         router.push("/");
+      } else {
+        toast.error("Error deleting clips");
       }
     };
 
@@ -86,7 +88,7 @@ export default function ClipsPage() {
 
   return (
     <div className="h-screen max-w-screen w-1/2 m-auto">
-      <Toaster></Toaster>
+      <Toaster />
       <div className="flex flex-row">
         <div className="flex flex-row w-[90%]">
           <button
@@ -112,12 +114,12 @@ export default function ClipsPage() {
       </div>
 
       <ul className="flex flex-col items-center gap-5 w-[80%]">
-        {videos.map((video, index) => (
-          <div key={index} className="flex items-center gap-2">
+        {videos.map((video, videoName) => (
+          <div key={videoName} className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={selected.includes(index)}
-              onChange={() => handleSelection(index)}
+              checked={selected.includes(videoName)}
+              onChange={() => handleSelection(videoName)}
             />
             <video controls width="250">
               <source src={`/videos/${video}`} type="video/mp4" />

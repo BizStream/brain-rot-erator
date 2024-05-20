@@ -16,7 +16,7 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         {children}
         <Suspense fallback={null}>
-          <NavigationEvents></NavigationEvents>
+          <NavigationEvents />
         </Suspense>
       </body>
     </html>
