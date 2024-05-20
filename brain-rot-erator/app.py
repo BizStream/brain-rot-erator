@@ -3,10 +3,16 @@ from flask_cors import CORS
 from moviepy.editor import VideoFileClip, AudioFileClip
 from werkzeug.utils import secure_filename
 import os
-from flask import send_from_directory
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
+import time
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+
+
+clips_started = False
 
 
 @app.route("/api/clips", methods=["POST"])
@@ -68,6 +74,7 @@ def process_data():
 
     # delete the file after processing
     os.remove(filepath)
+    scheduled_job()
 
     # # Process data here
     # # return 'Data collected: ' + title + ' ' + clipLength + ' ' + file.filename
@@ -84,16 +91,19 @@ def process_data():
     )
 
 
-@app.route("/api/videos", methods=["GET"])  # TODO: is this route right?
+@app.route("/api/videos", methods=["GET"])
 def list_clip_urls():
+    print("Listing clip URLs")
     output_folder = os.path.join("temporary_folder", "clips")
     clip_urls = []
     for filename in os.listdir(output_folder):
-        clip_urls.append(f"http://localhost:5000/api/clips/{filename}")  # or 5000?
+        clip_urls.append(f"http://localhost:5000/api/videos/{filename}")
 
+    print(clip_urls)
     return jsonify(clip_urls)
 
 
+# TODO: WHAT is hitting this endpoint?
 @app.route("/api/videos/<filename>", methods=["GET"])
 def get_clip(filename):
     output_folder = os.path.join("temporary_folder", "clips")
@@ -101,20 +111,43 @@ def get_clip(filename):
 
 
 @app.route("/api/delete_clips", methods=["POST"])
-def delete_clips():
+def delete_clips(filepath):
+    if os.path.exists(filepath):
+        os.remove(filepath)
+        print(f"Deleted {filepath}")
+
+
+def delete_old_videos(directory, max_age=3600):
+    """Deletes files older than max_age seconds in the specified directory."""
+    now = time.time()
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        if os.stat(file_path).st_mtime < now - max_age:
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
+
+
+def scheduled_job():
     output_folder = os.path.join("temporary_folder", "clips")
-    for filename in os.listdir(output_folder):
-        try:
-            os.remove(os.path.join(output_folder, filename))
-            return jsonify({"status": "success", "message": "Clips deleted."})
-        except Exception as e:
-            print(e)
-            return jsonify({"status": "error", "message": "Error deleting clips."})
+    global clips_started
+    if not clips_started:
+        scheduler.add_job(
+            func=delete_old_videos,
+            trigger="interval",
+            seconds=3600,
+            args=[output_folder],
+        )
+        clips_started = True
+        print("Starting scheduled job for ONE HOUR")
 
 
-@app.route("/api/clips", methods=["GET"])
-def get_clips():
-    return "Hello, World!"
+scheduler = BackgroundScheduler()
+scheduler.start()
+atexit.register(lambda: scheduler.shutdown())
+
+# @app.route("/api/clips", methods=["GET"])
+# def get_clips():
+#     return "Hello, World!"
 
 
 if __name__ == "__main__":

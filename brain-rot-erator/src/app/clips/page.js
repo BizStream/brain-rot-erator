@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
-import List from "react-list-select";
 
 export default function ClipsPage() {
   const router = useRouter();
@@ -11,15 +10,41 @@ export default function ClipsPage() {
   const [selected, setSelected] = useState([]);
 
   useEffect(() => {
-    const fetchVideos = async () => {
-      const response = await fetch("/api/clips");
-
-      const data = await response.json();
-      setVideos(data);
+    toast((t) => (
+      <span>
+        <b>WARNING:</b> Your clips will be deleted in ONE HOUR if you don't
+        download them
+      </span>
+    ));
+    const fetchVideoUrls = async () => {
+      const response = await fetch("http://localhost:5000/api/videos"); // Ensure the Flask server is running on port 5000
+      console.log("Response:", response);
+      if (response.ok) {
+        const videoUrls = await response.json();
+        setVideos(videoUrls);
+      } else {
+        console.error("Failed to fetch videos:", response.statusText);
+      }
     };
 
-    fetchVideos();
+    fetchVideoUrls();
   }, []);
+
+  const handleClipWatched = async (filename) => {
+    // const response = await fetch("http://localhost:5000/api/delete_clips", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({ filename }),
+    // });
+    // console.log("Response from deletion:", response);
+    // if (response.ok) {
+    //   console.log("Video deleted");
+    // } else {
+    //   toast.error("Error deleting video");
+    // }
+  };
 
   const handleReturnClick = (e) => {
     e.preventDefault();
@@ -46,19 +71,18 @@ export default function ClipsPage() {
   };
 
   const handleWarningClick = () => {
-    const deleteClips = async () => {
-      const response = await fetch("/api/clips", {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        router.push("/");
-      } else {
-        toast.error("Error deleting clips");
-      }
-    };
-
-    deleteClips();
+    // const deleteClips = async () => {
+    //   const response = await fetch("/api/clips", {
+    //     method: "DELETE",
+    //   });
+    //   if (response.ok) {
+    //     router.push("/");
+    //   } else {
+    //     toast.error("Error deleting clips");
+    //   }
+    // };
+    // deleteClips();
+    router.push("/");
   };
 
   const handleSelection = (index) => {
@@ -122,9 +146,12 @@ export default function ClipsPage() {
               onChange={() => handleSelection(videoName)}
             />
             <video controls width="250">
-              <source src={`/videos/${video}`} type="video/mp4" />
+              <source src={videos[videoName]} type="video/mp4" />
               Your browser doesn't support the video tag.
             </video>
+            <button onClick={() => handleClipWatched(videos[videoName])}>
+              Mark as watched
+            </button>
           </div>
         ))}
       </ul>
