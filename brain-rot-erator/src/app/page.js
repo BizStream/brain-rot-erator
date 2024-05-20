@@ -1,15 +1,19 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getClips } from "./lib/pythonService";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
+import { CircularProgress, LinearProgress } from "@mui/material";
 
 export default function Home() {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [clipLength, setClipLength] = useState(5);
   const [file, setFile] = useState("");
   const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -21,15 +25,15 @@ export default function Home() {
       setResponse("");
       return;
     }
-
-    setTitle("");
-    setClipLength(5);
+    setLoading(true);
 
     const answerRes = await getClips(title, clipLength, file);
 
     if (answerRes.status === 200) {
-      console.log("Success");
       setResponse(answerRes.data);
+      router.push("/clips");
+      setTitle("");
+      setClipLength(5);
     } else if (answerRes.status === "network-error") {
       console.log("Network error:", answerRes.error);
     } else {
@@ -110,19 +114,14 @@ export default function Home() {
             >
               Submit
             </button>
-
             <div
-              className="bg-gray-700 rounded px-2 py-2 max-w-[400px]"
-              style={{ display: response == "" ? "none" : "flex" }}
+              className="flex justify-center
+          "
             >
-              {response.message}
+              {loading && (
+                <CircularProgress className="flex justify-center"></CircularProgress>
+              )}
             </div>
-            <video
-              className="w-[250px]"
-              src="/asdf-1.mp4"
-              type="mp4"
-              autoPlay
-            ></video>
           </form>
         </div>
       </div>
