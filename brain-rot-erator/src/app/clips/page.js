@@ -64,8 +64,8 @@ export default function ClipsPage() {
       link.click();
       document.body.removeChild(link);
       delete_clip(video);
-      setSelected([]);
     });
+    setSelected([]);
   };
 
   const delete_clip = async function delete_clip(filepath) {
