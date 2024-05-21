@@ -53,8 +53,11 @@ export default function ClipsPage() {
     });
   };
 
-  const handleDownloadSelected = () => {
-    selected.forEach((index) => {
+  const handleDownloadSelected = async (e) => {
+    e.preventDefault();
+    console.log("Selected:", selected);
+    selected.forEach(async (index) => {
+      //waits for one video to download before moving on to the next one
       const video = videos[index];
 
       const link = document.createElement("a"); //creates a new anchor element in the DOM
@@ -62,14 +65,18 @@ export default function ClipsPage() {
       link.download = video.split("/").pop();
       document.body.appendChild(link); //attaches the anchor element to the body of the document even though it's not visible
       link.click();
+      console.log("downloaded");
       document.body.removeChild(link);
-      delete_clip(video);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); //waits for 1 second before moving on to the delete_clip function
+
+      await delete_clip(video); //loop will wait for this function to complete before moving on to the next iteration
     });
     setSelected([]);
   };
 
-  const delete_clip = async function delete_clip(filepath) {
+  const delete_clip = async (filepath) => {
     let filename = filepath.split("/").pop();
+    console.log("Filename:", filename);
     try {
       const response = await fetch(
         process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP,
@@ -81,17 +88,18 @@ export default function ClipsPage() {
           body: JSON.stringify({ filename }),
         }
       );
+      console.log("Response:", response);
 
       if (!response.ok) {
         throw new Error("Network response was not ok");
+      } else {
+        const responseData = await response.json();
+        console.log("Response data:", responseData);
+        setVideos((prevVideos) =>
+          prevVideos.filter((video) => video !== filepath)
+        );
+        return { status: response.status, data: responseData };
       }
-
-      const responseData = await response.json();
-      console.log("Response data:", responseData);
-      setVideos((prevVideos) =>
-        prevVideos.filter((video) => video !== filepath)
-      );
-      return { status: response.status, data: responseData };
     } catch (error) {
       console.error("Error parsing response:", error);
       return { status: "network-error", error };
@@ -117,7 +125,7 @@ export default function ClipsPage() {
             <button
               type="button"
               className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center mt-2"
-              onClick={() => handleDownloadSelected()}
+              onClick={(e) => handleDownloadSelected(e)}
             >
               Download selected
             </button>

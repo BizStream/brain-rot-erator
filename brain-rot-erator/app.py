@@ -106,22 +106,32 @@ def list_clip_urls():
 @app.route("/api/videos/<filename>", methods=["GET"])
 def get_clip(filename):
     output_folder = os.path.join("temporary_folder", "clips")
-    filepath = os.path.join(output_folder, filename)
-    response = send_from_directory(output_folder, filename, as_attachment=True)
-    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
-    return response
+    try:
+        response = send_from_directory(output_folder, filename, as_attachment=True)
+        response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
+    except FileNotFoundError:
+        return jsonify({"error": "File not found"}), 404
 
 
 @app.route("/api/delete_clips/", methods=["POST"])
 def delete_clips():
     data = request.get_json()
     filename = data.get("filename")
+    print(f"filename: {filename}")
     output_folder = os.path.join("temporary_folder", "clips")
     filepath = os.path.join(output_folder, filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
-        print(f"Deleted {filepath}")
-        return jsonify({"status": "success", "message": f"Deleted {filename}"}), 200
+    print(f"Deleting {filepath}")
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            # print(f"Deleted {filepath}")
+            return jsonify({"status": "success", "message": f"Deleted {filename}"}), 200
+        else:
+            return jsonify({"status": "error", "message": f"{filename} not found"}), 404
+    except Exception as e:
+        print(filepath)
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 def delete_old_videos(directory, max_age=3600):
