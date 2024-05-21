@@ -51,8 +51,6 @@ export default function ClipsPage() {
         return prevSelected.filter((i) => i !== index);
       }
     });
-
-    console.log(selected);
   };
 
   const handleDownloadSelected = () => {
@@ -66,12 +64,12 @@ export default function ClipsPage() {
       link.click();
       document.body.removeChild(link);
       delete_clip(video);
+      setSelected([]);
     });
   };
 
   const delete_clip = async function delete_clip(filepath) {
     let filename = filepath.split("/").pop();
-    console.log("Filename:", filename);
     try {
       const response = await fetch(
         process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP,
@@ -90,6 +88,9 @@ export default function ClipsPage() {
 
       const responseData = await response.json();
       console.log("Response data:", responseData);
+      setVideos((prevVideos) =>
+        prevVideos.filter((video) => video !== filepath)
+      );
       return { status: response.status, data: responseData };
     } catch (error) {
       console.error("Error parsing response:", error);
@@ -133,7 +134,7 @@ export default function ClipsPage() {
               checked={selected.includes(videoName)}
             />
             <video controls width="250">
-              <source src={videos[videoName]} type="video/mp4" />
+              <source src={video} type="video/mp4" />
               Your browser doesn't support the video tag.
             </video>
           </div>
