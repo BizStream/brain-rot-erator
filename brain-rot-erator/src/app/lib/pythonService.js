@@ -5,10 +5,13 @@ export async function getClips(title, clipLength, file) {
   formData.append("file", file); //is this actually a File object?
 
   try {
-    const response = await fetch("http://localhost:5000/api/clips", {
-      method: "POST",
-      body: formData,
-    });
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_PATH_TO_PROCESS_VIDEO,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Network response was not ok");

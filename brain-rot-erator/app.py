@@ -106,14 +106,22 @@ def list_clip_urls():
 @app.route("/api/videos/<filename>", methods=["GET"])
 def get_clip(filename):
     output_folder = os.path.join("temporary_folder", "clips")
-    return send_from_directory(output_folder, filename)
+    filepath = os.path.join(output_folder, filename)
+    response = send_from_directory(output_folder, filename, as_attachment=True)
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
 
 
-@app.route("/api/delete_clips", methods=["POST"])
-def delete_clips(filepath):
+@app.route("/api/delete_clips/", methods=["POST"])
+def delete_clips():
+    data = request.get_json()
+    filename = data.get("filename")
+    output_folder = os.path.join("temporary_folder", "clips")
+    filepath = os.path.join(output_folder, filename)
     if os.path.exists(filepath):
         os.remove(filepath)
         print(f"Deleted {filepath}")
+        return jsonify({"status": "success", "message": f"Deleted {filename}"}), 200
 
 
 def delete_old_videos(directory, max_age=3600):

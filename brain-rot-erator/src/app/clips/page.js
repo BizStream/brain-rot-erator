@@ -25,7 +25,7 @@ export default function ClipsPage() {
       </span>
     ));
     const fetchVideoUrls = async () => {
-      const response = await fetch("http://localhost:5000/api/videos");
+      const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
       if (response.ok) {
         const videoUrls = await response.json();
         setVideos(videoUrls);
@@ -51,18 +51,50 @@ export default function ClipsPage() {
         return prevSelected.filter((i) => i !== index);
       }
     });
+
+    console.log(selected);
   };
 
   const handleDownloadSelected = () => {
     selected.forEach((index) => {
       const video = videos[index];
+
       const link = document.createElement("a"); //creates a new anchor element in the DOM
-      link.href = `/videos/${video}`; //href is a property of the anchor element
-      link.download = video;
+      link.href = video; //href is a property of the anchor element
+      link.download = video.split("/").pop();
       document.body.appendChild(link); //attaches the anchor element to the body of the document even though it's not visible
       link.click();
       document.body.removeChild(link);
+      delete_clip(video);
     });
+  };
+
+  const delete_clip = async function delete_clip(filepath) {
+    let filename = filepath.split("/").pop();
+    console.log("Filename:", filename);
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ filename }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
+      return { status: response.status, data: responseData };
+    } catch (error) {
+      console.error("Error parsing response:", error);
+      return { status: "network-error", error };
+    }
   };
 
   return (
@@ -97,8 +129,8 @@ export default function ClipsPage() {
           <div key={videoName} className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={selected.includes(videoName)}
               onChange={() => handleSelection(videoName)}
+              checked={selected.includes(videoName)}
             />
             <video controls width="250">
               <source src={videos[videoName]} type="video/mp4" />
