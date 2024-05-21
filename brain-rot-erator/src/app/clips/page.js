@@ -53,9 +53,7 @@ export default function ClipsPage() {
     });
   };
 
-  const handleDownloadSelected = async (e) => {
-    e.preventDefault();
-    console.log("Selected:", selected);
+  const handleDownloadSelected = async () => {
     selected.forEach(async (index) => {
       //waits for one video to download before moving on to the next one
       const video = videos[index];
@@ -65,7 +63,6 @@ export default function ClipsPage() {
       link.download = video.split("/").pop();
       document.body.appendChild(link); //attaches the anchor element to the body of the document even though it's not visible
       link.click();
-      console.log("downloaded");
       document.body.removeChild(link);
       await new Promise((resolve) => setTimeout(resolve, 1000)); //waits for 1 second before moving on to the delete_clip function
 
@@ -76,7 +73,6 @@ export default function ClipsPage() {
 
   const delete_clip = async (filepath) => {
     let filename = filepath.split("/").pop();
-    console.log("Filename:", filename);
     try {
       const response = await fetch(
         process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP,
@@ -88,13 +84,11 @@ export default function ClipsPage() {
           body: JSON.stringify({ filename }),
         }
       );
-      console.log("Response:", response);
 
       if (!response.ok) {
         throw new Error("Network response was not ok");
       } else {
         const responseData = await response.json();
-        console.log("Response data:", responseData);
         setVideos((prevVideos) =>
           prevVideos.filter((video) => video !== filepath)
         );
@@ -125,7 +119,7 @@ export default function ClipsPage() {
             <button
               type="button"
               className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center mt-2"
-              onClick={(e) => handleDownloadSelected(e)}
+              onClick={() => handleDownloadSelected()}
             >
               Download selected
             </button>

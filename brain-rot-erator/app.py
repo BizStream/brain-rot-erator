@@ -63,9 +63,6 @@ def process_data():
 
         myClip.close()
 
-        print(
-            f"Processed video and audio clip from {clipCurrentStart} to {clipEnd} seconds."
-        )
         clipCurrentStart += int(clipLength)
         clipSegmentNum += 1
 
@@ -118,19 +115,15 @@ def get_clip(filename):
 def delete_clips():
     data = request.get_json()
     filename = data.get("filename")
-    print(f"filename: {filename}")
     output_folder = os.path.join("temporary_folder", "clips")
     filepath = os.path.join(output_folder, filename)
-    print(f"Deleting {filepath}")
     try:
         if os.path.exists(filepath):
             os.remove(filepath)
-            # print(f"Deleted {filepath}")
             return jsonify({"status": "success", "message": f"Deleted {filename}"}), 200
         else:
             return jsonify({"status": "error", "message": f"{filename} not found"}), 404
     except Exception as e:
-        print(filepath)
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -141,7 +134,6 @@ def delete_old_videos(directory, max_age=3600):
         file_path = os.path.join(directory, filename)
         if os.stat(file_path).st_mtime < now - max_age:
             os.remove(file_path)
-            print(f"Deleted: {file_path}")
 
 
 def scheduled_job():
