@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
-import List from "react-list-select";
 
 export default function ClipsPage() {
   const router = useRouter();
@@ -11,54 +10,36 @@ export default function ClipsPage() {
   const [selected, setSelected] = useState([]);
 
   useEffect(() => {
-    const fetchVideos = async () => {
-      const response = await fetch("/api/clips");
-
-      const data = await response.json();
-      setVideos(data);
+    toast((t) => (
+      <span>
+        <b>WARNING: </b>your clips will be DELETED in ONE HOUR if you don't
+        download them
+        <button
+          className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
+          onClick={() => {
+            toast.dismiss(t.id);
+          }}
+        >
+          Dismiss
+        </button>
+      </span>
+    ));
+    const fetchVideoUrls = async () => {
+      const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
+      if (response.ok) {
+        const videoUrls = await response.json();
+        setVideos(videoUrls);
+      } else {
+        console.error("Failed to fetch videos:", response.statusText);
+      }
     };
 
-    fetchVideos();
+    fetchVideoUrls();
   }, []);
 
   const handleReturnClick = (e) => {
     e.preventDefault();
-
-    // After videos are deleted for the first time (length === 0), the next time you come to this page it redirects you home BUT TODO: the toast still pops up for a split second
-    if (videos.length === 0) {
-      router.push("/");
-    } else {
-      toast((t) => (
-        <span>
-          Are you sure? <b className="text-2xl">Your clips will be DELETED</b>
-          <button
-            className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
-            onClick={() => {
-              toast.dismiss(t.id);
-              handleWarningClick();
-            }}
-          >
-            Confirm
-          </button>
-        </span>
-      ));
-    }
-  };
-
-  const handleWarningClick = () => {
-    const deleteClips = async () => {
-      const response = await fetch("/api/clips", {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        router.push("/");
-      } else {
-        toast.error("Error deleting clips");
-      }
-    };
-
-    deleteClips();
+    router.push("/");
   };
 
   const handleSelection = (index) => {
@@ -70,20 +51,53 @@ export default function ClipsPage() {
         return prevSelected.filter((i) => i !== index);
       }
     });
-
-    console.log("Selected:", selected);
   };
 
-  const handleDownloadSelected = () => {
-    selected.forEach((index) => {
+  const handleDownloadSelected = async () => {
+    selected.forEach(async (index) => {
+      //waits for one video to download before moving on to the next one
       const video = videos[index];
+
       const link = document.createElement("a"); //creates a new anchor element in the DOM
-      link.href = `/videos/${video}`; //href is a property of the anchor element
-      link.download = video;
+      link.href = video; //href is a property of the anchor element
+      link.download = video.split("/").pop();
       document.body.appendChild(link); //attaches the anchor element to the body of the document even though it's not visible
       link.click();
       document.body.removeChild(link);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); //waits for 1 second before moving on to the delete_clip function
+
+      await delete_clip(video); //loop will wait for this function to complete before moving on to the next iteration
     });
+    setSelected([]);
+  };
+
+  const delete_clip = async (filepath) => {
+    let filename = filepath.split("/").pop();
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ filename }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      } else {
+        const responseData = await response.json();
+        setVideos((prevVideos) =>
+          prevVideos.filter((video) => video !== filepath)
+        );
+        return { status: response.status, data: responseData };
+      }
+    } catch (error) {
+      console.error("Error parsing response:", error);
+      return { status: "network-error", error };
+    }
   };
 
   return (
@@ -118,11 +132,11 @@ export default function ClipsPage() {
           <div key={videoName} className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={selected.includes(videoName)}
               onChange={() => handleSelection(videoName)}
+              checked={selected.includes(videoName)}
             />
             <video controls width="250">
-              <source src={`/videos/${video}`} type="video/mp4" />
+              <source src={video} type="video/mp4" />
               Your browser doesn't support the video tag.
             </video>
           </div>

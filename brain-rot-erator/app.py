@@ -1,12 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from moviepy.editor import VideoFileClip, AudioFileClip
 from werkzeug.utils import secure_filename
 import os
-from flask import send_from_directory
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
+import time
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+
+
+clips_started = False
 
 
 @app.route("/api/clips", methods=["POST"])
@@ -34,17 +40,14 @@ def process_data():
     file.save(filepath)
 
     # Create the output folder if it doesn't exist
-    output_folder = os.path.join("public/videos")
+    output_folder = os.path.join("temporary_folder", "clips")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     clipSegmentNum = 1
     clipCurrentStart = 0
-    # audio = AudioFileClip(filepath)
-
     movie = VideoFileClip(filepath)
     total_duration = movie.duration
-    print(total_duration)
 
     # loop through the video and create clips of the specified length
     while clipCurrentStart < total_duration:
@@ -58,30 +61,16 @@ def process_data():
         myClip = movie.subclip(clipCurrentStart, clipEnd)
         myClip.write_videofile(output_video_path, codec="libx264", audio=False)
 
-        # Process audio
-        # if clipSegmentNum == 1:
-        #     myAudio = audio.subclip(clipCurrentStart, clipEnd)
-        #     print("First segment")
-        # else:
-        #     myAudio = audio.subclip(clipCurrentStart)
-        #     print("Not first segment")
-        # myAudio.write_audiofile(output_video_path.replace(".mp4", ".mp3"))
-
-        # myAudio.close()
         myClip.close()
 
-        print(
-            f"Processed video and audio clip from {clipCurrentStart} to {clipEnd} seconds."
-        )
         clipCurrentStart += int(clipLength)
         clipSegmentNum += 1
 
     movie.close()
-    # audio.close()
 
     # delete the file after processing
-
     os.remove(filepath)
+    scheduled_job()
 
     # # Process data here
     # # return 'Data collected: ' + title + ' ' + clipLength + ' ' + file.filename
@@ -98,9 +87,76 @@ def process_data():
     )
 
 
-@app.route("/api/clips", methods=["GET"])
-def get_clips():
-    return "Hello, World!"
+@app.route("/api/videos", methods=["GET"])
+def list_clip_urls():
+
+    output_folder = os.path.join("temporary_folder", "clips")
+    clip_urls = []
+    for filename in os.listdir(output_folder):
+        clip_urls.append(f"http://localhost:5000/api/videos/{filename}")
+
+    return jsonify(clip_urls)
+
+
+# TODO: WHAT is hitting this endpoint?
+# TODO: And WHY is each clip being called twice?
+@app.route("/api/videos/<filename>", methods=["GET"])
+def get_clip(filename):
+    output_folder = os.path.join("temporary_folder", "clips")
+    try:
+        response = send_from_directory(output_folder, filename, as_attachment=True)
+        response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
+    except FileNotFoundError:
+        return jsonify({"error": "File not found"}), 404
+
+
+@app.route("/api/delete_clips/", methods=["POST"])
+def delete_clips():
+    data = request.get_json()
+    filename = data.get("filename")
+    output_folder = os.path.join("temporary_folder", "clips")
+    filepath = os.path.join(output_folder, filename)
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            return jsonify({"status": "success", "message": f"Deleted {filename}"}), 200
+        else:
+            return jsonify({"status": "error", "message": f"{filename} not found"}), 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+def delete_old_videos(directory, max_age=3600):
+    """Deletes files older than max_age seconds in the specified directory."""
+    now = time.time()
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        if os.stat(file_path).st_mtime < now - max_age:
+            os.remove(file_path)
+
+
+def scheduled_job():
+    output_folder = os.path.join("temporary_folder", "clips")
+    global clips_started
+    if not clips_started:
+        scheduler.add_job(
+            func=delete_old_videos,
+            trigger="interval",
+            seconds=3600,
+            args=[output_folder],
+        )
+        clips_started = True
+        print("Starting scheduled job for ONE HOUR")
+
+
+scheduler = BackgroundScheduler()
+scheduler.start()
+atexit.register(lambda: scheduler.shutdown())
+
+# @app.route("/api/clips", methods=["GET"])
+# def get_clips():
+#     return "Hello, World!"
 
 
 if __name__ == "__main__":
