@@ -11,9 +11,11 @@ export default function Home() {
   const [title, setTitle] = useState("");
   const [clipLength, setClipLength] = useState(5);
   const [file, setFile] = useState("");
+  const [adFill, setAdFill] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const fileInputRef = useRef(null);
+  const fileInputRef1 = useRef(null);
+  const fileInputRef2 = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,21 +25,27 @@ export default function Home() {
     }
     setLoading(true);
 
-    const answerRes = await getClips(title, clipLength, file);
+    const answerRes = await getClips(title, clipLength, file, adFill);
 
     if (answerRes.status === 200) {
       router.push("/clips");
+      return;
     }
     console.error("Failed to generate clips:", answerRes.statusText);
     setLoading(false);
   };
 
-  const handleAttachClick = () => {
-    fileInputRef.current.click();
+  const handleAttachClick1 = () => {
+    fileInputRef1.current.click();
   };
 
-  const handleFileChange = (files) => {
-    setFile(files?.[0] ?? "");
+  const handleAttachClick2 = () => {
+    fileInputRef2.current.click();
+  };
+
+  const handleFileChange = (files, fileNum) => {
+    if (fileNum === 1) setFile(files?.[0] ?? "");
+    else setAdFill(files?.[0] ?? "");
   };
 
   return (
@@ -65,21 +73,44 @@ export default function Home() {
               <div className="flex">
                 <button
                   type="button"
-                  onClick={() => handleAttachClick()}
+                  onClick={() => handleAttachClick1()}
                   className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
                 >
-                  Attach mp4
+                  Attach movie
                 </button>
+
                 <input
                   type="file"
-                  ref={fileInputRef}
+                  ref={fileInputRef1}
                   style={{ display: "none" }}
                   multiple={false}
-                  onChange={(e) => handleFileChange(e.target.files)}
+                  onChange={(e) => handleFileChange(e.target.files, 1)}
                   accept="video/mp4,video/x-m4v,video/*"
                 />
                 <p className="flex items-center px-4 text-blue-500">
                   {file.name}
+                </p>
+              </div>
+
+              <div className="flex">
+                <button
+                  type="button"
+                  onClick={() => handleAttachClick2()}
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
+                >
+                  Attach ad-fill
+                </button>
+
+                <input
+                  type="file"
+                  ref={fileInputRef2}
+                  style={{ display: "none" }}
+                  multiple={false}
+                  onChange={(e) => handleFileChange(e.target.files, 2)}
+                  accept="video/mp4,video/x-m4v,video/*"
+                />
+                <p className="flex items-center px-4 text-blue-500">
+                  {adFill.name}
                 </p>
               </div>
 

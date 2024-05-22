@@ -1,8 +1,9 @@
-export async function getClips(title, clipLength, file) {
+export async function getClips(title, clipLength, file, adFill) {
   const formData = new FormData();
   formData.append("title", title);
   formData.append("clipLength", clipLength);
   formData.append("file", file); //is this actually a File object?
+  formData.append("adFill", adFill);
 
   try {
     const response = await fetch(
