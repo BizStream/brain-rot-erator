@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, after_this_request
 from flask_cors import CORS
-from moviepy.editor import VideoFileClip, AudioFileClip
+from moviepy.editor import VideoFileClip
 from werkzeug.utils import secure_filename
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 import time
+from threading import Timer
 
 
 app = Flask(__name__)
@@ -17,74 +18,76 @@ clips_started = False
 
 @app.route("/api/clips", methods=["POST"])
 def process_data():
-    title = request.form["title"]
-    clipLength = request.form["clipLength"]
-    file = request.files["file"]  # For files, use request.files
+    try:
+        title = request.form["title"]
+        clipLength = request.form["clipLength"]
+        file = request.files["file"]  # For files, use request.files
 
-    # Create the temporary folder if it doesn't exist
-    upload_folder = os.path.join("temporary_folder")
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)
+        # Create the temporary folder if it doesn't exist
+        upload_folder = os.path.join("temporary_folder")
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
 
-    fileName = secure_filename(
-        file.filename
-    )  # file is a file object with a filename attribute and a bunch of other attributes
+        fileName = secure_filename(
+            file.filename
+        )  # file is a file object with a filename attribute and a bunch of other attributes
 
-    # prev temp file wasn't removed correctly
-    if upload_folder.__contains__(fileName):
-        fileName = secure_filename("1" + file.filename)
+        # prev temp file wasn't removed correctly
+        if upload_folder.__contains__(fileName):
+            fileName = secure_filename("1" + file.filename)
 
-    filepath = os.path.join(
-        upload_folder, fileName
-    )  # put the file in the temporary folder
-    file.save(filepath)
+        filepath = os.path.join(
+            upload_folder, fileName
+        )  # put the file in the temporary folder
+        file.save(filepath)
 
-    # Create the output folder if it doesn't exist
-    output_folder = os.path.join("temporary_folder", "clips")
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+        # Create the output folder if it doesn't exist
+        output_folder = os.path.join("temporary_folder", "clips")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
 
-    clipSegmentNum = 1
-    clipCurrentStart = 0
-    movie = VideoFileClip(filepath)
-    total_duration = movie.duration
+        clipSegmentNum = 1
+        clipCurrentStart = 0
+        movie = VideoFileClip(filepath)
+        total_duration = movie.duration
 
-    # loop through the video and create clips of the specified length
-    while clipCurrentStart < total_duration:
-        clipEnd = clipCurrentStart + int(clipLength)
-        if clipEnd > total_duration:
-            clipEnd = total_duration
+        # loop through the video and create clips of the specified length
+        while clipCurrentStart < total_duration:
+            clipEnd = clipCurrentStart + int(clipLength)
+            if clipEnd > total_duration:
+                clipEnd = total_duration
 
-        output_video_path = os.path.join(output_folder, f"{title}-{clipSegmentNum}.mp4")
+            output_video_path = os.path.join(
+                output_folder, f"{title}-{clipSegmentNum}.mp4"
+            )
 
-        # Process video
-        myClip = movie.subclip(clipCurrentStart, clipEnd)
-        myClip.write_videofile(output_video_path, codec="libx264", audio=False)
+            # Process video
+            myClip = movie.subclip(clipCurrentStart, clipEnd)
+            myClip.write_videofile(output_video_path, codec="libx264", audio=False)
 
-        myClip.close()
+            myClip.close()
 
-        clipCurrentStart += int(clipLength)
-        clipSegmentNum += 1
+            clipCurrentStart += int(clipLength)
+            clipSegmentNum += 1
 
-    movie.close()
+        movie.close()
 
-    # delete the file after processing
-    os.remove(filepath)
-    scheduled_job()
+        # delete the file after processing
+        os.remove(filepath)
+        scheduled_job()
 
-    # # Process data here
-    # # return 'Data collected: ' + title + ' ' + clipLength + ' ' + file.filename
-    return (
-        jsonify(
+        # # Process data here
+        # # return 'Data collected: ' + title + ' ' + clipLength + ' ' + file.filename
+        return jsonify(
             {
                 "status": "success",
                 "message": "Data collected: {} {} {}".format(
                     title, clipLength, file.filename
                 ),
             }
-        ),
-        200,
-    )
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @app.route("/api/videos", methods=["GET"])
@@ -98,8 +101,7 @@ def list_clip_urls():
     return jsonify(clip_urls)
 
 
-# TODO: WHAT is hitting this endpoint?
-# TODO: And WHY is each clip being called twice?
+# TODO: just give it beginning file name and then it will return all the clips
 @app.route("/api/videos/<filename>", methods=["GET"])
 def get_clip(filename):
     output_folder = os.path.join("temporary_folder", "clips")
@@ -113,9 +115,9 @@ def get_clip(filename):
 
 @app.route("/api/delete_clips/", methods=["POST"])
 def delete_clips():
+    output_folder = os.path.join("temporary_folder", "clips")
     data = request.get_json()
     filename = data.get("filename")
-    output_folder = os.path.join("temporary_folder", "clips")
     filepath = os.path.join(output_folder, filename)
     try:
         if os.path.exists(filepath):
@@ -153,11 +155,6 @@ def scheduled_job():
 scheduler = BackgroundScheduler()
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
-
-# @app.route("/api/clips", methods=["GET"])
-# def get_clips():
-#     return "Hello, World!"
-
 
 if __name__ == "__main__":
     app.run(debug=True)

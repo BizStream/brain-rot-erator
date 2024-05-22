@@ -1,28 +1,24 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { getClips } from "./lib/pythonService";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
-import { CircularProgress, LinearProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 
 export default function Home() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [clipLength, setClipLength] = useState(5);
   const [file, setFile] = useState("");
-  const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (title === "" || file === "") {
       toast.error("Please fill out all fields");
-      setResponse("");
       return;
     }
     setLoading(true);
@@ -30,40 +26,29 @@ export default function Home() {
     const answerRes = await getClips(title, clipLength, file);
 
     if (answerRes.status === 200) {
-      setResponse(answerRes.data);
       router.push("/clips");
-      setTitle("");
-      setClipLength(5);
-    } else if (answerRes.status === "network-error") {
-      console.log("Network error:", answerRes.error);
-    } else {
-      console.log("Error");
     }
+    console.error("Failed to generate clips:", answerRes.statusText);
+    setLoading(false);
   };
 
-  const handleAttachClick = (e) => {
-    e.preventDefault();
+  const handleAttachClick = () => {
     fileInputRef.current.click();
   };
 
   const handleFileChange = (files) => {
-    if (files.length === 0) {
-      setFile("");
-      return;
-    }
-    const fileInput = files[0];
-    setFile(fileInput);
+    setFile(files?.[0] ?? "");
   };
 
   return (
-    <div className="">
-      <Toaster></Toaster>
+    <div>
+      <Toaster />
       <div className="flex max-w-900 mx-auto w-full justify-center">
         <div className="flex flex-col">
           <p className="flex justify-center my-4 font-bold">Brain Rot-erator</p>
           <form
             className="flex flex-col space-y-4"
-            onSubmit={(e) => handleSubmit(e)}
+            onSubmit={() => handleSubmit()}
           >
             <div className="flex flex-col space-y-4">
               <div className="flex">
@@ -80,7 +65,7 @@ export default function Home() {
               <div className="flex">
                 <button
                   type="button"
-                  onClick={(e) => handleAttachClick(e)}
+                  onClick={() => handleAttachClick()}
                   className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
                 >
                   Attach mp4
@@ -89,9 +74,10 @@ export default function Home() {
                   type="file"
                   ref={fileInputRef}
                   style={{ display: "none" }}
+                  multiple={false}
                   onChange={(e) => handleFileChange(e.target.files)}
                   accept="video/mp4,video/x-m4v,video/*"
-                ></input>
+                />
                 <p className="flex items-center px-4 text-blue-500">
                   {file.name}
                 </p>
@@ -102,7 +88,7 @@ export default function Home() {
                 <select
                   value={clipLength}
                   onChange={(e) => setClipLength(e.target.value)}
-                  class="border border-gray-300 bg-white h-10 px-5 rounded-lg text-sm focus:outline-none text-black self-center"
+                  className="border border-gray-300 bg-white h-10 px-5 rounded-lg text-sm focus:outline-none text-black self-center"
                 >
                   <option value="5">5</option>
                   <option value="10">10</option>
@@ -122,9 +108,7 @@ export default function Home() {
               className="flex justify-center
           "
             >
-              {loading && (
-                <CircularProgress className="flex justify-center"></CircularProgress>
-              )}
+              {loading && <CircularProgress className="flex justify-center" />}
             </div>
           </form>
         </div>
