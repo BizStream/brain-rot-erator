@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
@@ -58,8 +58,9 @@ export default function ClipsPage() {
     });
   };
 
+  //TODO: figure out better way to call delete after file has been downloaded
+  //TODO: endpoint for viewing the links and then endpoint to download and the delete the links after they've been downloaded?
   const handleDownloadSelected = async () => {
-    console.log("Downloading selected clips:", selected);
     selected.forEach(async (videoUrl) => {
       //waits for one video to download before moving on to the next one
       const video = videoUrl;
@@ -72,14 +73,12 @@ export default function ClipsPage() {
       document.body.removeChild(link);
       await new Promise((resolve) => setTimeout(resolve, 1000)); //waits for 1 second before moving on to the delete_clip function
 
-      console.log("Deleting clip:", video);
       await delete_clip(video); //loop will wait for this function to complete before moving on to the next iteration
     });
     setSelected([]);
   };
 
   const delete_clip = async (filepath) => {
-    console.log("Deleting clip:", filepath);
     let filename = filepath.split("/").pop();
     try {
       const response = await fetch(
@@ -135,25 +134,26 @@ export default function ClipsPage() {
         </div>
       </div>
 
-      <ul className="flex flex-col items-center gap-5 w-[80%]">
-        {videos.map((videoUrl, videoIndex) => (
-          <div
-            key={videoUrl}
-            url={videoUrl}
-            className="flex items-center gap-2"
-          >
-            <input
-              type="checkbox"
-              onChange={() => handleSelection(videoUrl)}
-              checked={selected.includes(videoUrl)}
-            />
-            <video controls width="250">
-              <source src={videoUrl} type="video/mp4" />
-              Your browser doesn't support the video tag.
-            </video>
-          </div>
-        ))}
-      </ul>
+      <div className="flex flex-col items-center gap-5 w-[80%]">
+        {videos?.length > 0 &&
+          videos.map((videoUrl, videoIndex) => (
+            <div
+              key={videoUrl}
+              url={videoUrl}
+              className="flex items-center gap-2"
+            >
+              <input
+                type="checkbox"
+                onChange={() => handleSelection(videoUrl)}
+                checked={selected.includes(videoUrl)}
+              />
+              <video controls width="250">
+                <source src={videoUrl} type="video/mp4" />
+                Your browser doesn't support the video tag.
+              </video>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }

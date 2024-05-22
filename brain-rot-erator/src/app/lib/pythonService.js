@@ -18,7 +18,6 @@ export async function getClips(title, clipLength, file) {
     }
 
     const responseData = await response.json(); //responseData.status could be 'error' if the js program has a problem parsing the response with response.json()
-    console.log("Response data:", responseData);
     return { status: response.status, data: responseData }; //Have to return the status of response and not responseData cuz then it's just a string
   } catch (error) {
     console.error("Error parsing response:", error);
