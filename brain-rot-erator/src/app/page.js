@@ -47,6 +47,10 @@ export default function Home() {
   };
 
   const handleFileChange = (files) => {
+    if (files.length === 0) {
+      setFile("");
+      return;
+    }
     const fileInput = files[0];
     setFile(fileInput);
   };

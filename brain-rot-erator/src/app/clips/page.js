@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
@@ -11,19 +11,24 @@ export default function ClipsPage() {
 
   useEffect(() => {
     toast((t) => (
-      <span>
-        <b>WARNING: </b>your clips will be DELETED in ONE HOUR if you don't
-        download them
+      <div className="flex flex-col items-center gap-2">
+        <span>
+          <b>WARNING: </b>your clips will be DELETED in ONE HOUR if you don't
+          download them
+        </span>
         <button
-          className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
           onClick={() => {
             toast.dismiss(t.id);
           }}
         >
           Dismiss
         </button>
-      </span>
+      </div>
     ));
+  }, []);
+
+  useEffect(() => {
     const fetchVideoUrls = async () => {
       const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
       if (response.ok) {
@@ -54,9 +59,10 @@ export default function ClipsPage() {
   };
 
   const handleDownloadSelected = async () => {
-    selected.forEach(async (index) => {
+    console.log("Downloading selected clips:", selected);
+    selected.forEach(async (videoUrl) => {
       //waits for one video to download before moving on to the next one
-      const video = videos[index];
+      const video = videoUrl;
 
       const link = document.createElement("a"); //creates a new anchor element in the DOM
       link.href = video; //href is a property of the anchor element
@@ -66,12 +72,14 @@ export default function ClipsPage() {
       document.body.removeChild(link);
       await new Promise((resolve) => setTimeout(resolve, 1000)); //waits for 1 second before moving on to the delete_clip function
 
+      console.log("Deleting clip:", video);
       await delete_clip(video); //loop will wait for this function to complete before moving on to the next iteration
     });
     setSelected([]);
   };
 
   const delete_clip = async (filepath) => {
+    console.log("Deleting clip:", filepath);
     let filename = filepath.split("/").pop();
     try {
       const response = await fetch(
@@ -128,15 +136,19 @@ export default function ClipsPage() {
       </div>
 
       <ul className="flex flex-col items-center gap-5 w-[80%]">
-        {videos.map((video, videoName) => (
-          <div key={videoName} className="flex items-center gap-2">
+        {videos.map((videoUrl, videoIndex) => (
+          <div
+            key={videoUrl}
+            url={videoUrl}
+            className="flex items-center gap-2"
+          >
             <input
               type="checkbox"
-              onChange={() => handleSelection(videoName)}
-              checked={selected.includes(videoName)}
+              onChange={() => handleSelection(videoUrl)}
+              checked={selected.includes(videoUrl)}
             />
             <video controls width="250">
-              <source src={video} type="video/mp4" />
+              <source src={videoUrl} type="video/mp4" />
               Your browser doesn't support the video tag.
             </video>
           </div>
