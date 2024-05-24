@@ -1,4 +1,4 @@
-export async function getClips(title, clipLength, file, adFill) {
+export async function processClips(title, clipLength, file, adFill) {
   const formData = new FormData();
   formData.append("title", title);
   formData.append("clipLength", clipLength);

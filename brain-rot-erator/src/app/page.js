@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getClips } from "./lib/pythonService";
+import { processClips } from "./lib/pythonService";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { CircularProgress } from "@mui/material";
@@ -25,7 +25,7 @@ export default function Home() {
     }
     setLoading(true);
 
-    const answerRes = await getClips(title, clipLength, file, adFill);
+    const answerRes = await processClips(title, clipLength, file, adFill);
 
     if (answerRes.status === 200) {
       router.push("/clips");

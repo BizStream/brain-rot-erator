@@ -3,13 +3,28 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
+import { CircularProgress } from "@mui/material";
 
 export default function ClipsPage() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [selected, setSelected] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    fetchVideoUrls();
+  }, []);
+
+  const fetchVideoUrls = async () => {
+    const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
+    if (response.ok) {
+      const videoUrls = await response.json();
+      setVideos(videoUrls);
+    } else {
+      console.error("Failed to fetch videos:", response.statusText);
+    }
+    setIsLoading(false);
+
     toast((t) => (
       <div className="flex flex-col items-center gap-2">
         <span>
@@ -26,21 +41,7 @@ export default function ClipsPage() {
         </button>
       </div>
     ));
-  }, []);
-
-  useEffect(() => {
-    const fetchVideoUrls = async () => {
-      const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
-      if (response.ok) {
-        const videoUrls = await response.json();
-        setVideos(videoUrls);
-      } else {
-        console.error("Failed to fetch videos:", response.statusText);
-      }
-    };
-
-    fetchVideoUrls();
-  }, []);
+  };
 
   const handleReturnClick = (e) => {
     e.preventDefault();
@@ -58,23 +59,25 @@ export default function ClipsPage() {
     });
   };
 
-  //TODO: figure out better way to call delete after file has been downloaded
-  //TODO: endpoint for viewing the links and then endpoint to download and the delete the links after they've been downloaded?
   const handleDownloadSelected = async () => {
-    selected.forEach(async (videoUrl) => {
-      //waits for one video to download before moving on to the next one
-      const video = videoUrl;
-
-      const link = document.createElement("a"); //creates a new anchor element in the DOM
-      link.href = video; //href is a property of the anchor element
-      link.download = video.split("/").pop();
-      document.body.appendChild(link); //attaches the anchor element to the body of the document even though it's not visible
+    for (const videoUrl of selected) {
+      // Fetch the video
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      // Create a link and download the video
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = videoUrl.split("/").pop();
+      document.body.appendChild(link);
       link.click();
+      // Clean up the link
       document.body.removeChild(link);
-      await new Promise((resolve) => setTimeout(resolve, 1000)); //waits for 1 second before moving on to the delete_clip function
-
-      await delete_clip(video); //loop will wait for this function to complete before moving on to the next iteration
-    });
+      URL.revokeObjectURL(link.href);
+      // Wait for a short period to ensure the download starts
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Delete the clip
+      await delete_clip(videoUrl);
+    }
     setSelected([]);
   };
 
@@ -106,6 +109,14 @@ export default function ClipsPage() {
       return { status: "network-error", error };
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <CircularProgress />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen max-w-screen w-1/2 m-auto">

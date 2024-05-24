@@ -121,7 +121,6 @@ def list_clip_urls():
     return jsonify(clip_urls)
 
 
-# TODO: just give it beginning file name and then it will return all the clips
 @app.route("/api/videos/<filename>", methods=["GET"])
 def get_clip(filename):
     output_folder = os.path.join("temporary_folder", "clips")
