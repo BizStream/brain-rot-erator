@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory, after_this_request
 from flask_cors import CORS
-from moviepy.editor import VideoFileClip
+from moviepy.editor import VideoFileClip, CompositeVideoClip
 from werkzeug.utils import secure_filename
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -22,11 +22,14 @@ def process_data():
         title = request.form["title"]
         clipLength = request.form["clipLength"]
         file = request.files["file"]  # For files, use request.files
+        adFill = request.files["adFill"]
 
         # Create the temporary folder if it doesn't exist
         upload_folder = os.path.join("temporary_folder")
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
+
+        adFillFileName = secure_filename(adFill.filename)
 
         fileName = secure_filename(
             file.filename
@@ -36,10 +39,16 @@ def process_data():
         if upload_folder.__contains__(fileName):
             fileName = secure_filename("1" + file.filename)
 
+        if upload_folder.__contains__(adFillFileName):
+            adFillFileName = secure_filename("1" + adFill.filename)
+
         filepath = os.path.join(
             upload_folder, fileName
         )  # put the file in the temporary folder
         file.save(filepath)
+
+        adFillPath = os.path.join(upload_folder, adFillFileName)
+        adFill.save(adFillPath)
 
         # Create the output folder if it doesn't exist
         output_folder = os.path.join("temporary_folder", "clips")
@@ -49,7 +58,15 @@ def process_data():
         clipSegmentNum = 1
         clipCurrentStart = 0
         movie = VideoFileClip(filepath)
+        adFill = VideoFileClip(adFillPath)
+        adFill = adFill.set_position(("center", "bottom"))
+        finalClip = CompositeVideoClip(
+            [movie, adFill],
+            size=(max(movie.size[0], adFill.size[0]), movie.size[1] + adFill.size[1]),
+        )
         total_duration = movie.duration
+
+        print("movie duration: ", total_duration)
 
         # loop through the video and create clips of the specified length
         while clipCurrentStart < total_duration:
@@ -62,7 +79,7 @@ def process_data():
             )
 
             # Process video
-            myClip = movie.subclip(clipCurrentStart, clipEnd)
+            myClip = finalClip.subclip(clipCurrentStart, clipEnd)
             myClip.write_videofile(output_video_path, codec="libx264", audio=False)
 
             myClip.close()
@@ -71,9 +88,12 @@ def process_data():
             clipSegmentNum += 1
 
         movie.close()
+        adFill.close()
 
         # delete the file after processing
         os.remove(filepath)
+        print("adFillPath: ", adFillPath)
+        os.remove(adFillPath)
         scheduled_job()
 
         # # Process data here
@@ -82,7 +102,7 @@ def process_data():
             {
                 "status": "success",
                 "message": "Data collected: {} {} {}".format(
-                    title, clipLength, file.filename
+                    title, clipLength, file.filename, adFill.filename
                 ),
             }
         )
@@ -101,7 +121,6 @@ def list_clip_urls():
     return jsonify(clip_urls)
 
 
-# TODO: just give it beginning file name and then it will return all the clips
 @app.route("/api/videos/<filename>", methods=["GET"])
 def get_clip(filename):
     output_folder = os.path.join("temporary_folder", "clips")
