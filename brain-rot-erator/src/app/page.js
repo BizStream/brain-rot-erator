@@ -74,6 +74,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => handleAttachClick1()}
+                  data-testid="attachMovie"
                   className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
                 >
                   Attach movie
@@ -85,6 +86,7 @@ export default function Home() {
                   style={{ display: "none" }}
                   multiple={false}
                   onChange={(e) => handleFileChange(e.target.files, 1)}
+                  data-testid="attachMovieInput"
                   accept="video/mp4,video/x-m4v,video/*"
                 />
                 <p className="flex items-center px-4 text-blue-500">
@@ -107,6 +109,7 @@ export default function Home() {
                   style={{ display: "none" }}
                   multiple={false}
                   onChange={(e) => handleFileChange(e.target.files, 2)}
+                  data-testid="attachAdFillInput"
                   accept="video/mp4,video/x-m4v,video/*"
                 />
                 <p className="flex items-center px-4 text-blue-500">
@@ -119,6 +122,7 @@ export default function Home() {
                 <select
                   value={clipLength}
                   onChange={(e) => setClipLength(e.target.value)}
+                  data-testid="clipLength"
                   className="border border-gray-300 bg-white h-10 px-5 rounded-lg text-sm focus:outline-none text-black self-center"
                 >
                   <option value="5">5</option>
@@ -139,7 +143,12 @@ export default function Home() {
               className="flex justify-center
           "
             >
-              {loading && <CircularProgress className="flex justify-center" />}
+              {loading && (
+                <CircularProgress
+                  data-testid="progressbar"
+                  className="flex justify-center"
+                />
+              )}
             </div>
           </form>
         </div>
