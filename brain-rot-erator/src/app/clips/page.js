@@ -4,12 +4,28 @@ import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { CircularProgress } from "@mui/material";
+import io from "socket.io-client";
 
 export default function ClipsPage() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [selected, setSelected] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const socket = io("http://localhost:5000/");
+
+    socket.on("files_deleted", (data) => {
+      toast.error(
+        "Your clips have been deleted and will no longer download. Please refresh the page.",
+        { duration: Infinity }
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     fetchVideoUrls();
@@ -158,7 +174,7 @@ export default function ClipsPage() {
                 onChange={() => handleSelection(videoUrl)}
                 checked={selected.includes(videoUrl)}
               />
-              <video controls width="250">
+              <video data-testid={videoUrl} controls width="250">
                 <source src={videoUrl} type="video/mp4" />
                 Your browser doesn't support the video tag.
               </video>

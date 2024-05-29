@@ -4,13 +4,9 @@ const nextJest = require("next/jest");
 const createJestConfig = nextJest({
   dir: ".",
 });
-/**
- * For a detailed explanation regarding each configuration property, visit:
- * https://jestjs.io/docs/configuration
- */
 
 /** @type {import('jest').Config} */
-const config = {
+const customJestConfig = {
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
@@ -143,7 +139,7 @@ const config = {
   // runner: "jest-runner",
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  // setupFiles: [],
+  setupFiles: ["<rootDir>/jest.setup.js"],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   // setupFilesAfterEnv: [],
@@ -205,4 +201,4 @@ const config = {
   // watchman: true,
 };
 
-module.exports = createJestConfig(config);
+module.exports = createJestConfig(customJestConfig);
