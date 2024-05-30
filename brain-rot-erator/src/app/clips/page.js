@@ -135,10 +135,10 @@ export default function ClipsPage() {
   }
 
   return (
-    <div className="h-screen max-w-screen w-1/2 m-auto">
+    <div className="h-screen max-w-screen w-100 m-auto">
       <Toaster />
-      <div className="flex flex-row">
-        <div className="flex flex-row w-[90%]">
+      <div className="w-1/2 m-auto">
+        <div className="flex flex-row justify-center p-10 gap-10">
           <button
             type="button"
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center"
@@ -146,40 +146,42 @@ export default function ClipsPage() {
           >
             Return
           </button>
-          <div className="w-full">
-            <h1 className="flex justify-center my-4 font-bold">Your Clips!</h1>
-          </div>
+
           <div className="flex">
             <button
               type="button"
-              className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center mt-2"
+              className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center w-24"
               onClick={() => handleDownloadSelected()}
             >
               Download selected
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="flex flex-col items-center gap-5 w-[80%]">
-        {videos?.length > 0 &&
-          videos.map((videoUrl, videoIndex) => (
-            <div
-              key={videoUrl}
-              url={videoUrl}
-              className="flex items-center gap-2"
-            >
-              <input
-                type="checkbox"
-                onChange={() => handleSelection(videoUrl)}
-                checked={selected.includes(videoUrl)}
-              />
-              <video data-testid={videoUrl} controls width="250">
-                <source src={videoUrl} type="video/mp4" />
-                Your browser doesn't support the video tag.
-              </video>
-            </div>
-          ))}
+        <div className="flex flex-col items-center gap-5">
+          {videos?.length > 0 &&
+            videos.map((videoUrl, videoIndex) => (
+              <div
+                key={videoUrl}
+                url={videoUrl}
+                className="flex items-center gap-2 flex-col border-2 border-gray-300 p-2"
+              >
+                <video data-testid={videoUrl} controls width="250">
+                  <source src={videoUrl} type="video/mp4" />
+                  Your browser doesn't support the video tag.
+                </video>
+                <div className="flex justify-between w-full border-[1px] border-gray-300">
+                  <span className="ml-3">{videoUrl.split("/")[5]}</span>
+                  <input
+                    type="checkbox"
+                    onChange={() => handleSelection(videoUrl)}
+                    checked={selected.includes(videoUrl)}
+                    className="mr-3"
+                  />
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
     </div>
   );
