@@ -95,6 +95,7 @@ export default function Home() {
                 <div className="flex gap-2">
                   <input
                     type="text"
+                    maxLength={20}
                     placeholder="Enter movie title here..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -134,7 +135,7 @@ export default function Home() {
                     data-testid="attachAdFillInput"
                     accept="video/mp4,video/x-m4v,video/*"
                   />
-                  <p className="flex items-center text-blue-500 py-3">
+                  <p className="flex items-center text-blue-500 py-3 h-[48px]">
                     {adFill.name}
                   </p>
                 </div>
@@ -150,10 +151,7 @@ export default function Home() {
               </div>
             )}
 
-            <div
-              className="flex justify-center
-          "
-            >
+            <div className="flex justify-center h-[48px]">
               {loading && (
                 <CircularProgress
                   data-testid="progressbar"
@@ -162,20 +160,6 @@ export default function Home() {
               )}
             </div>
           </form>
-          {!isAttached && (
-            <div className="flex items-center font-bold flex-col gap-2">
-              Movie List
-              <ul className="text-blue-500 font-medium space-y-2">
-                <li>
-                  <a href="google.com" target="_blank">
-                    Movie 1
-                  </a>
-                </li>
-                <li>Movie 2</li>
-                <li>Movie 3</li>
-              </ul>
-            </div>
-          )}
         </div>
       </div>
     </div>

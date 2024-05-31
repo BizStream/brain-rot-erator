@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
-import { CircularProgress } from "@mui/material";
+import { CircularProgress, duration } from "@mui/material";
 import io from "socket.io-client";
 
 export default function ClipsPage() {
@@ -35,28 +35,35 @@ export default function ClipsPage() {
     const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
     if (response.ok) {
       const videoUrls = await response.json();
-      setVideos(videoUrls);
+      console.log("videos", videoUrls);
+      //TODO: change parenth to time stamp
+      setVideos(videoUrls.sort((a, b) => (a.videoUrl > b.videoUrl ? 1 : -1)));
     } else {
       console.error("Failed to fetch videos:", response.statusText);
     }
     setIsLoading(false);
 
-    toast((t) => (
-      <div className="flex flex-col items-center gap-2">
-        <span>
-          <b>WARNING: </b>your clips will be DELETED in ONE HOUR if you don't
-          download them
-        </span>
-        <button
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
-          onClick={() => {
-            toast.dismiss(t.id);
-          }}
-        >
-          Dismiss
-        </button>
-      </div>
-    ));
+    toast(
+      (t) => (
+        <div className="flex flex-col items-center gap-2">
+          <span>
+            <b>WARNING: </b>your clips will be DELETED in ONE HOUR if you
+            don&apos;t download them
+          </span>
+          <button
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded"
+            onClick={() => {
+              toast.dismiss(t.id);
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      ),
+      {
+        duration: Infinity,
+      }
+    );
   };
 
   const handleReturnClick = (e) => {
@@ -138,7 +145,7 @@ export default function ClipsPage() {
     <div className="h-screen max-w-screen w-100 m-auto">
       <Toaster />
       <div className="w-1/2 m-auto">
-        <div className="flex flex-row justify-center p-10 gap-10">
+        <div className="flex flex-row justify-center p-10">
           <button
             type="button"
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center"
@@ -150,7 +157,7 @@ export default function ClipsPage() {
           <div className="flex">
             <button
               type="button"
-              className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center w-24"
+              className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center w-24 fixed top-8 right-[30%] z-50"
               onClick={() => handleDownloadSelected()}
             >
               Download selected
@@ -168,7 +175,7 @@ export default function ClipsPage() {
               >
                 <video data-testid={videoUrl} controls width="250">
                   <source src={videoUrl} type="video/mp4" />
-                  Your browser doesn't support the video tag.
+                  Your browser doesn&apos;t support the video tag.
                 </video>
                 <div className="flex justify-between w-full border-[1px] border-gray-300">
                   <span className="ml-3">{videoUrl.split("/")[5]}</span>

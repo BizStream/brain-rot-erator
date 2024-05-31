@@ -8,6 +8,12 @@
   --background-end-rgb: 255, 255, 255;
 }
 
+.bg-gradient-loop {
+  background: linear-gradient(180deg, #2D3748, #1A202C, #2D3748);
+  background-size: 100% 200%;
+  background-repeat: repeat-y;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;

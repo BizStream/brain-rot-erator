@@ -1,8 +1,9 @@
 import os
-from moviepy.editor import VideoFileClip, CompositeVideoClip
+from moviepy.editor import VideoFileClip, CompositeVideoClip, concatenate_videoclips
 from werkzeug.utils import secure_filename
 from python.utils import get_unique_title
 from python.config import UPLOAD_FOLDER, CLIPS_FOLDER
+from PIL import Image
 
 
 def process_video(title, clipLength, file, adFill):
@@ -30,20 +31,34 @@ def process_video(title, clipLength, file, adFill):
 
         clipSegmentNum = 1
         clipCurrentStart = 0
-        movie = VideoFileClip(filepath)
-        adFill = VideoFileClip(adFillPath)
-        adFill = adFill.set_position(("center", "bottom"))
+        movie = VideoFileClip(filepath).resize(height=2532 / 2)
+        adFill = VideoFileClip(adFillPath, audio=None).resize(height=2532 / 2)
+
+        adFill_duration = adFill.duration
+        movie_duration = movie.duration
+
+        clips = []
+        current_duration = 0
+        while current_duration < movie_duration:
+            clips.append(adFill)
+            current_duration += adFill_duration
+
+        extended_adFill = concatenate_videoclips(clips)
+        extended_adFill = extended_adFill.subclip(0, movie_duration)
+
         finalClip = CompositeVideoClip(
-            [movie, adFill],
-            size=(max(movie.size[0], adFill.size[0]), movie.size[1] + adFill.size[1]),
+            [
+                movie.set_position(("center", "top")),
+                extended_adFill.set_position(("center", "bottom")),
+            ],
+            size=(1170, 2532),
         )
-        total_duration = movie.duration
 
         # loop through the video and create clips of the specified length
-        while clipCurrentStart < total_duration:
+        while clipCurrentStart < movie_duration:
             clipEnd = clipCurrentStart + int(clipLength)
-            if clipEnd > total_duration:
-                clipEnd = total_duration
+            if clipEnd > movie_duration:
+                clipEnd = movie_duration
 
             title = get_unique_title(CLIPS_FOLDER, title, clipSegmentNum)
 
@@ -53,7 +68,13 @@ def process_video(title, clipLength, file, adFill):
 
             # Process video
             myClip = finalClip.subclip(clipCurrentStart, clipEnd)
-            myClip.write_videofile(output_video_path, codec="libx264", audio=False)
+            myClip.write_videofile(
+                output_video_path,
+                codec="libx264",
+                audio_codec="aac",
+                temp_audiofile="temp-audio.m4a",
+                remove_temp=True,
+            )
 
             myClip.close()
 
@@ -62,6 +83,7 @@ def process_video(title, clipLength, file, adFill):
 
         movie.close()
         adFill.close()
+        extended_adFill.close()
 
         # delete the file after processing
         os.remove(filepath)

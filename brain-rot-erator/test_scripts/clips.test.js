@@ -81,15 +81,5 @@ describe("Clips Page Component", () => {
     await act(async () => {
       render(<Clips />);
     });
-
-    //TODO: change these assertions when the list of videos displays their name as well
-    // await waitFor(() => {
-    //   expect(
-    //     screen.getByTestId("http://localhost/video1.mp4")
-    //   ).toBeInTheDocument();
-    //   expect(
-    //     screen.getByTestId("http://localhost/video2.mp4")
-    //   ).toBeInTheDocument();
-    // });
   });
 });
