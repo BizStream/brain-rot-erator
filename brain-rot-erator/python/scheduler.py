@@ -1,4 +1,5 @@
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 import atexit
 import time
 import os
@@ -33,10 +34,21 @@ def scheduled_job():
             trigger="interval",
             seconds=MAX_AGE,
             args=[CLIPS_FOLDER],
+            misfire_grace_time=MAX_AGE,
         )
         clips_started = True
         print("Starting scheduled job for ONE HOUR")
 
 
+executors = {"default": ThreadPoolExecutor(20), "processpool": ProcessPoolExecutor(5)}
+
+job_defaults = {
+    "coalesce": False,
+    "max_instances": 3,
+    "misfire_grace_time": MAX_AGE,  # Allows job to run if missed within the last hour
+}
+
+
+scheduler = BackgroundScheduler(executors=executors, job_defaults=job_defaults)
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())

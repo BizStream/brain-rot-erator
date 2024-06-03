@@ -13,6 +13,7 @@ export default function Home() {
   const [file, setFile] = useState("");
   const [adFill, setAdFill] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isAttached, setIsAttached] = useState(false);
 
   const fileInputRef1 = useRef(null);
   const fileInputRef2 = useRef(null);
@@ -46,103 +47,110 @@ export default function Home() {
   const handleFileChange = (files, fileNum) => {
     if (fileNum === 1) setFile(files?.[0] ?? "");
     else setAdFill(files?.[0] ?? "");
+    if (fileNum === 1 && (files?.[0] == "" || files?.[0] == null)) {
+      setIsAttached(false);
+    } else {
+      setIsAttached(true);
+    }
   };
 
   return (
-    <div>
+    <div className="h-screen">
       <Toaster />
-      <div className="flex max-w-900 mx-auto w-full justify-center">
-        <div className="flex flex-col">
-          <p className="flex justify-center my-4 font-bold">Brain Rot-erator</p>
+      <div className="flex w-1/2 max-h-[75%] h-[100%] mx-auto justify-center items-center">
+        <div className="flex flex-col gap-10">
+          <p className="flex justify-center my-4 font-bold text-xl">
+            Brain Rot-erator
+          </p>
           <form
-            className="flex flex-col space-y-4"
+            className="flex flex-col space-y-4 gap-5"
             onSubmit={() => handleSubmit()}
           >
-            <div className="flex flex-col space-y-4">
-              <div className="flex">
-                <p className="flex items-center px-4">Movie title</p>
-                <input
-                  type="text"
-                  placeholder="Enter movie title here..."
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none text-black"
-                />
-              </div>
+            <div className="flex items-center flex-col">
+              <button
+                type="button"
+                onClick={() => handleAttachClick1()}
+                data-testid="attachMovie"
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
+              >
+                Attach movie
+              </button>
 
-              <div className="flex">
-                <button
-                  type="button"
-                  onClick={() => handleAttachClick1()}
-                  data-testid="attachMovie"
-                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
-                >
-                  Attach movie
-                </button>
-
-                <input
-                  type="file"
-                  ref={fileInputRef1}
-                  style={{ display: "none" }}
-                  multiple={false}
-                  onChange={(e) => handleFileChange(e.target.files, 1)}
-                  data-testid="attachMovieInput"
-                  accept="video/mp4,video/x-m4v,video/*"
-                />
-                <p className="flex items-center px-4 text-blue-500">
-                  {file.name}
-                </p>
-              </div>
-
-              <div className="flex">
-                <button
-                  type="button"
-                  onClick={() => handleAttachClick2()}
-                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
-                >
-                  Attach ad-fill
-                </button>
-
-                <input
-                  type="file"
-                  ref={fileInputRef2}
-                  style={{ display: "none" }}
-                  multiple={false}
-                  onChange={(e) => handleFileChange(e.target.files, 2)}
-                  data-testid="attachAdFillInput"
-                  accept="video/mp4,video/x-m4v,video/*"
-                />
-                <p className="flex items-center px-4 text-blue-500">
-                  {adFill.name}
-                </p>
-              </div>
-
-              <div className="flex">
-                <p className="flex items-center px-4">Clip length (secs)</p>
-                <select
-                  value={clipLength}
-                  onChange={(e) => setClipLength(e.target.value)}
-                  data-testid="clipLength"
-                  className="border border-gray-300 bg-white h-10 px-5 rounded-lg text-sm focus:outline-none text-black self-center"
-                >
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="20">20</option>
-                </select>
-              </div>
+              <input
+                type="file"
+                ref={fileInputRef1}
+                style={{ display: "none" }}
+                multiple={false}
+                onChange={(e) => handleFileChange(e.target.files, 1)}
+                data-testid="attachMovieInput"
+                accept="video/mp4,video/x-m4v,video/*"
+              />
+              <p className="flex items-center  text-blue-500 py-3">
+                {file.name}
+              </p>
             </div>
-            <button
-              type="submit"
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center"
-              onClick={(e) => handleSubmit(e)}
-            >
-              Submit
-            </button>
-            <div
-              className="flex justify-center
-          "
-            >
+            {isAttached && (
+              <div className="flex flex-col space-y-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    maxLength={12}
+                    placeholder="Enter movie title here..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none text-black"
+                  />
+                  <div className="flex">
+                    <select
+                      value={clipLength}
+                      onChange={(e) => setClipLength(e.target.value)}
+                      data-testid="clipLength"
+                      className="border border-gray-300 bg-white h-10 px-5 rounded-lg text-sm focus:outline-none text-black self-center"
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="15">15</option>
+                      <option value="20">20</option>
+                    </select>
+                    <p className="flex items-center px-4">Clip length (secs)</p>
+                  </div>
+                </div>
+                <p className="flex justify-center pt-10 font-bold">Options</p>
+                <div className="flex items-center flex-col">
+                  <button
+                    type="button"
+                    onClick={() => handleAttachClick2()}
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
+                  >
+                    Attach ad-fill
+                  </button>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef2}
+                    style={{ display: "none" }}
+                    multiple={false}
+                    onChange={(e) => handleFileChange(e.target.files, 2)}
+                    data-testid="attachAdFillInput"
+                    accept="video/mp4,video/x-m4v,video/*"
+                  />
+                  <p className="flex items-center text-blue-500 py-3 h-[48px]">
+                    {adFill.name}
+                  </p>
+                </div>
+                <div className="flex pt-10 justify-center">
+                  <button
+                    type="submit"
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center"
+                    onClick={(e) => handleSubmit(e)}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center h-[48px]">
               {loading && (
                 <CircularProgress
                   data-testid="progressbar"
