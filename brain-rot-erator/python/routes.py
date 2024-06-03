@@ -1,6 +1,6 @@
 from flask import request, jsonify, send_from_directory
 from python import python, socketio
-from python.video_processing import process_video
+from python.video_processing import process_video, process_video_no_ad
 from python.scheduler import scheduled_job
 from python.config import CLIPS_FOLDER
 import os
@@ -13,15 +13,22 @@ def process_data():
         clipLength = request.form["clipLength"]
         file = request.files["file"]
         adFill = request.files["adFill"]
+        print("adFill", adFill)
+        if adFill is None:
+            print("No adFill provided")
+            process_video_no_ad(title, clipLength, file)
+        else:
+            process_video(title, clipLength, file, adFill)
 
-        process_video(title, clipLength, file, adFill)
         scheduled_job()  # is this the right spot?
+
+        adFillFilename = adFill.filename if adFill else None
 
         return jsonify(
             {
                 "status": "success",
                 "message": "Data collected: {} {} {}".format(
-                    title, clipLength, file.filename, adFill.filename
+                    title, clipLength, file.filename, adFillFilename
                 ),
             }
         )

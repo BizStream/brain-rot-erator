@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
-import { CircularProgress, duration } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import io from "socket.io-client";
+import { sortedVideos } from "./utils";
 
 export default function ClipsPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function ClipsPage() {
       const videoUrls = await response.json();
       console.log("videos", videoUrls);
       //TODO: change parenth to time stamp
-      setVideos(videoUrls.sort((a, b) => (a.videoUrl > b.videoUrl ? 1 : -1)));
+      setVideos(sortedVideos(videoUrls));
     } else {
       console.error("Failed to fetch videos:", response.statusText);
     }

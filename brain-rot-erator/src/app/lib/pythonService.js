@@ -3,7 +3,10 @@ export async function processClips(title, clipLength, file, adFill) {
   formData.append("title", title);
   formData.append("clipLength", clipLength);
   formData.append("file", file); //is this actually a File object?
-  formData.append("adFill", adFill);
+  console.log("adFill", adFill);
+  if (adFill && adFill !== "") {
+    formData.append("adFill", adFill);
+  }
 
   try {
     const response = await fetch(

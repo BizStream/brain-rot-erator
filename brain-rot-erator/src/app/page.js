@@ -14,7 +14,6 @@ export default function Home() {
   const [adFill, setAdFill] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAttached, setIsAttached] = useState(false);
-  const [isFilled, setIsFilled] = useState(false);
 
   const fileInputRef1 = useRef(null);
   const fileInputRef2 = useRef(null);
@@ -95,7 +94,7 @@ export default function Home() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    maxLength={20}
+                    maxLength={12}
                     placeholder="Enter movie title here..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
