@@ -34,7 +34,6 @@ describe("Home Component", () => {
 
     // Simulate user uploading a file
     await userEvent.upload(fileInput, file); //gotta be async cuz DOM element loading dynamically
-    // console.log(fileInput.files[0].name);
     expect(screen.getByText("movie.mp4")).toBeInTheDocument();
   });
 

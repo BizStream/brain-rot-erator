@@ -1,15 +1,12 @@
 import React, { act } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import Clips from "../src/app/clips/page.js"; // Adjust the path to where Home component is located
+import Clips from "../src/app/clips/page.js";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import "@testing-library/jest-dom";
 import fetchMock from "jest-fetch-mock";
 import io from "socket.io-client";
-
-//TODO: Mock the .env file
-// Mock dependencies
 
 jest.mock("react-hot-toast");
 jest.mock("next/navigation", () => ({
@@ -43,8 +40,6 @@ describe("Clips Page Component", () => {
         { duration: Infinity }
       );
     });
-
-    //expect(mockSocket.disconnect).toHaveBeenCalled();
   });
 
   it("should display a toast warning that clips will be deleted in one hour", async () => {

@@ -13,12 +13,10 @@ def process_data():
         clipLength = request.form["clipLength"]
         file = request.files["file"]
         adFill = request.files["adFill"]
-        print("adFill", adFill)
         if adFill is None:
-            print("No adFill provided")
-            process_video_no_ad(title, clipLength, file)
+            clipsData = process_video_no_ad(title, clipLength, file)
         else:
-            process_video(title, clipLength, file, adFill)
+            clipsData = process_video(title, clipLength, file, adFill)
 
         scheduled_job()  # is this the right spot?
 
@@ -30,6 +28,7 @@ def process_data():
                 "message": "Data collected: {} {} {}".format(
                     title, clipLength, file.filename, adFillFilename
                 ),
+                "clipsData": clipsData,
             }
         )
     except Exception as e:

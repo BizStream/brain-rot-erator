@@ -3,7 +3,8 @@ from moviepy.editor import VideoFileClip, CompositeVideoClip, concatenate_videoc
 from werkzeug.utils import secure_filename
 from python.config import UPLOAD_FOLDER, CLIPS_FOLDER
 from PIL import Image
-from datetime import datetime
+from datetime import datetime, timedelta
+from pytz import timezone
 
 
 def process_video(title, clipLength, file, adFill):
@@ -53,6 +54,8 @@ def process_video(title, clipLength, file, adFill):
             size=(1170, 2532),
         )
 
+        clipsData = []
+
         # loop through the video and create clips of the specified length
         while clipCurrentStart < movie_duration:
             clipEnd = clipCurrentStart + int(clipLength)
@@ -73,25 +76,42 @@ def process_video(title, clipLength, file, adFill):
                 remove_temp=True,
             )
 
+            # Get the current time in Eastern Time (ET)
+            eastern = timezone("US/Eastern")
+
             write_time = os.path.getmtime(output_video_path)
             write_time = datetime.fromtimestamp(
-                write_time
+                write_time, eastern
             )  # make it readable for humans
+            expires_at = datetime.fromtimestamp(write_time.timestamp() + 15, eastern)
             formatted_time = write_time.strftime("%H.%M.%S")
+            formatted_expires_at = expires_at.strftime("%H.%M.%S")
 
             output_video_path = os.path.join(
                 CLIPS_FOLDER, f"{title}[{clipSegmentNum}]-{formatted_time}.mp4"
             )
-            print(f"Writing to {output_video_path}")
             os.rename(
                 os.path.join(CLIPS_FOLDER, f"{title}-{clipSegmentNum}.mp4"),
                 output_video_path,
             )
+            new_title = f"{title}[{clipSegmentNum}]-{formatted_time}.mp4"
+            print("new_title:", new_title)
 
             myClip.close()
 
             clipCurrentStart += int(clipLength)
             clipSegmentNum += 1
+
+            clipData = {
+                "clipName": new_title,
+                "clipPath": output_video_path,
+                "segment": clipSegmentNum,
+                "hasAdfill": True,
+                "clipLength": myClip.duration,
+                "createdAt": write_time,
+                "expiresAt": expires_at,
+            }
+            clipsData.append(clipData)
 
         movie.close()
         adFill.close()
@@ -100,6 +120,7 @@ def process_video(title, clipLength, file, adFill):
         # delete the file after processing
         os.remove(filepath)
         os.remove(adFillPath)
+        return clipsData
     except Exception as e:
         print("Error processing video", e)
         raise e
@@ -131,6 +152,8 @@ def process_video_no_ad(title, clipLength, file):
             [movie.set_position(("center", "top"))], size=(1170, 2532)
         )
 
+        clipsData = []
+
         # loop through the video and create clips of the specified length
         while clipCurrentStart < movie_duration:
             clipEnd = clipCurrentStart + int(clipLength)
@@ -151,30 +174,48 @@ def process_video_no_ad(title, clipLength, file):
                 remove_temp=True,
             )
 
+            # Get the current time in Eastern Time (ET)
+            eastern = timezone("US/Eastern")
+
             write_time = os.path.getmtime(output_video_path)
             write_time = datetime.fromtimestamp(
-                write_time
+                write_time, eastern
             )  # make it readable for humans
+            expires_at = datetime.fromtimestamp(write_time.timestamp() + 60, eastern)
             formatted_time = write_time.strftime("%H.%M.%S")
+            formatted_expires_at = expires_at.strftime("%H.%M.%S")
 
             output_video_path = os.path.join(
                 CLIPS_FOLDER, f"{title}[{clipSegmentNum}]-{formatted_time}.mp4"
             )
-            print(f"Writing to {output_video_path}")
             os.rename(
                 os.path.join(CLIPS_FOLDER, f"{title}-{clipSegmentNum}.mp4"),
                 output_video_path,
             )
+            new_title = f"{title}[{clipSegmentNum}]-{formatted_time}.mp4"
+            print("new_title:", new_title)
 
             myClip.close()
 
             clipCurrentStart += int(clipLength)
+
+            clipData = {
+                "clipName": os.path.basename(output_video_path),
+                "clipPath": output_video_path,
+                "segment": clipSegmentNum,
+                "hasAdfill": False,
+                "clipLength": myClip.duration,
+                "createdAt": write_time,
+                "expiresAt": expires_at,
+            }
+            clipsData.append(clipData)
             clipSegmentNum += 1
 
         movie.close()
 
         # delete the file after processing
         os.remove(filepath)
+        return clipsData
     except Exception as e:
         print("Error processing video", e)
         raise e

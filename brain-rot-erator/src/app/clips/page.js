@@ -5,9 +5,20 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { CircularProgress } from "@mui/material";
 import io from "socket.io-client";
-import { sortedVideos } from "./utils";
+import { sortedVideos, checkAndRemoveExpiredClips, delete_clip } from "./utils";
+
+const useExpiredClipsCheck = () => {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkAndRemoveExpiredClips();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+};
 
 export default function ClipsPage() {
+  useExpiredClipsCheck();
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -36,8 +47,6 @@ export default function ClipsPage() {
     const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
     if (response.ok) {
       const videoUrls = await response.json();
-      console.log("videos", videoUrls);
-      //TODO: change parenth to time stamp
       setVideos(sortedVideos(videoUrls));
     } else {
       console.error("Failed to fetch videos:", response.statusText);
@@ -85,53 +94,22 @@ export default function ClipsPage() {
 
   const handleDownloadSelected = async () => {
     for (const videoUrl of selected) {
-      // Fetch the video
       const response = await fetch(videoUrl);
       const blob = await response.blob();
-      // Create a link and download the video
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = videoUrl.split("/").pop();
       document.body.appendChild(link);
       link.click();
-      // Clean up the link
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
-      // Wait for a short period to ensure the download starts
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Delete the clip
-      await delete_clip(videoUrl);
+      await delete_clip(videoUrl); //TODO: this needs to delete from localStorage if not already
+      setVideos((prevVideos) =>
+        prevVideos.filter((video) => video !== videoUrl)
+      );
     }
     setSelected([]);
-  };
-
-  const delete_clip = async (filepath) => {
-    let filename = filepath.split("/").pop();
-    try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ filename }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      } else {
-        const responseData = await response.json();
-        setVideos((prevVideos) =>
-          prevVideos.filter((video) => video !== filepath)
-        );
-        return { status: response.status, data: responseData };
-      }
-    } catch (error) {
-      console.error("Error parsing response:", error);
-      return { status: "network-error", error };
-    }
   };
 
   if (isLoading) {
