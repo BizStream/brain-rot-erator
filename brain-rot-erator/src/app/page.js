@@ -29,6 +29,16 @@ export default function Home() {
     const answerRes = await processClips(title, clipLength, file, adFill);
 
     if (answerRes.status === 200) {
+      const clipsData = answerRes.data.clipsData;
+
+      //save res to localStorage
+      Object.keys(clipsData).forEach((key1) => {
+        const createdAt = clipsData[key1]["createdAt"];
+        const storageKey = `${key1}-${createdAt}`;
+        const clip = clipsData[key1];
+        localStorage.setItem(storageKey, JSON.stringify(clip));
+      });
+
       router.push("/clips");
       return;
     }

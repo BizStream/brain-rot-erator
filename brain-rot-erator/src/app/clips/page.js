@@ -5,9 +5,22 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { CircularProgress } from "@mui/material";
 import io from "socket.io-client";
-import { sortedVideos } from "./utils";
+import { checkAndRemoveExpiredClips, deleteClipFromLocal } from "./utils";
+import { fetchVideoUrls, delete_clip } from "../lib/pythonService";
+
+// custome hook to check for expired clips
+const useExpiredClipsCheck = () => {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkAndRemoveExpiredClips();
+    }, 10000); // check every minute
+
+    return () => clearInterval(interval);
+  }, []);
+};
 
 export default function ClipsPage() {
+  useExpiredClipsCheck();
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -16,11 +29,19 @@ export default function ClipsPage() {
   useEffect(() => {
     const socket = io("http://localhost:5000/");
 
-    socket.on("files_deleted", (data) => {
+    socket.on("file_deleted", (data) => {
+      console.log("file_deleted", data);
+
+      //TODO: update setVideos to remove the clip from the list. What does data return?
+      // setVideos((prevVideos) => prevVideos.filter((video) => video !== data));
+
       toast.error(
-        "Your clips have been deleted and will no longer download. Please refresh the page.",
+        "A clip has been deleted. Please refresh the page to see the change.",
         { duration: Infinity }
       );
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     });
 
     return () => {
@@ -28,22 +49,7 @@ export default function ClipsPage() {
     };
   }, []);
 
-  useEffect(() => {
-    fetchVideoUrls();
-  }, []);
-
-  const fetchVideoUrls = async () => {
-    const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_URLS);
-    if (response.ok) {
-      const videoUrls = await response.json();
-      console.log("videos", videoUrls);
-      //TODO: change parenth to time stamp
-      setVideos(sortedVideos(videoUrls));
-    } else {
-      console.error("Failed to fetch videos:", response.statusText);
-    }
-    setIsLoading(false);
-
+  const createToast = () => {
     toast(
       (t) => (
         <div className="flex flex-col items-center gap-2">
@@ -67,6 +73,23 @@ export default function ClipsPage() {
     );
   };
 
+  useEffect(() => {
+    const fetchAndSetVideos = async () => {
+      try {
+        const sortedVideos = await fetchVideoUrls();
+        setVideos(sortedVideos);
+        setIsLoading(false);
+
+        createToast();
+      } catch (error) {
+        console.error("Error fetching videos:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchAndSetVideos();
+  }, []);
+
   const handleReturnClick = (e) => {
     e.preventDefault();
     router.push("/");
@@ -83,55 +106,34 @@ export default function ClipsPage() {
     });
   };
 
-  const handleDownloadSelected = async () => {
-    for (const videoUrl of selected) {
-      // Fetch the video
-      const response = await fetch(videoUrl);
-      const blob = await response.blob();
-      // Create a link and download the video
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = videoUrl.split("/").pop();
-      document.body.appendChild(link);
-      link.click();
-      // Clean up the link
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      // Wait for a short period to ensure the download starts
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Delete the clip
-      await delete_clip(videoUrl);
-    }
-    setSelected([]);
+  const createDownloadLink = async (blob, videoUrl) => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = videoUrl.split("/").pop();
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    // wait for the download to finish before deleting the clip
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   };
 
-  const delete_clip = async (filepath) => {
-    let filename = filepath.split("/").pop();
-    try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ filename }),
-        }
-      );
+  const handleDownloadSelected = async () => {
+    for (const videoUrl of selected) {
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      } else {
-        const responseData = await response.json();
-        setVideos((prevVideos) =>
-          prevVideos.filter((video) => video !== filepath)
-        );
-        return { status: response.status, data: responseData };
-      }
-    } catch (error) {
-      console.error("Error parsing response:", error);
-      return { status: "network-error", error };
+      createDownloadLink(blob, videoUrl);
+
+      await delete_clip(videoUrl, true);
+      deleteClipFromLocal(videoUrl);
+      //TODO: see if this is necessary
+      setVideos((prevVideos) =>
+        prevVideos.filter((video) => video !== videoUrl)
+      );
     }
+    setSelected([]);
   };
 
   if (isLoading) {
