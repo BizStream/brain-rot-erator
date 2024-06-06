@@ -13,7 +13,7 @@ const useExpiredClipsCheck = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       checkAndRemoveExpiredClips();
-    }, 10000); // check every minute
+    }, 60000); // check every minute
 
     return () => clearInterval(interval);
   }, []);

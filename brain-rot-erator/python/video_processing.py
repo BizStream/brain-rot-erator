@@ -1,7 +1,7 @@
 import os
 from moviepy.editor import VideoFileClip, CompositeVideoClip, concatenate_videoclips
 from werkzeug.utils import secure_filename
-from python.config import UPLOAD_FOLDER, CLIPS_FOLDER
+from python.config import UPLOAD_FOLDER, CLIPS_FOLDER, MAX_AGE
 from datetime import datetime
 from pytz import timezone
 
@@ -151,7 +151,7 @@ def process_single_clip(
     write_time = datetime.fromtimestamp(
         write_time, eastern
     )  # make it readable for humans
-    expires_at = datetime.fromtimestamp(write_time.timestamp() + 10, eastern)
+    expires_at = datetime.fromtimestamp(write_time.timestamp() + MAX_AGE, eastern)
     formatted_time = write_time.strftime("%H.%M.%S")
 
     output_video_path = os.path.join(
