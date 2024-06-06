@@ -1,9 +1,9 @@
 from flask import request, jsonify, send_from_directory
 from python import python, socketio
 from python.video_processing import process_video, process_video_no_ad
-from python.scheduler import scheduled_job
 from python.config import CLIPS_FOLDER
 import os
+from flask_socketio import emit
 
 
 @python.route("/api/clips", methods=["POST"])
@@ -12,15 +12,15 @@ def process_data():
         title = request.form["title"]
         clipLength = request.form["clipLength"]
         file = request.files["file"]
-        adFill = request.files["adFill"]
-        if adFill is None:
+        adFill = request.form.get("adFill")
+
+        if adFill == "":
             clipsData = process_video_no_ad(title, clipLength, file)
+            adFillFilename = None
         else:
+            adFill = request.files["adFill"]
             clipsData = process_video(title, clipLength, file, adFill)
-
-        scheduled_job()  # is this the right spot?
-
-        adFillFilename = adFill.filename if adFill else None
+            adFillFilename = adFill.filename if adFill else None
 
         return jsonify(
             {
@@ -62,6 +62,9 @@ def delete_clips():
     try:
         if os.path.exists(filepath):
             os.remove(filepath)
+            socketio.emit(
+                "file_deleted", {"filename": filename}, namespace="/"
+            )  # files_deleted is an event name
             return jsonify({"status": "success", "message": f"Deleted {filename}"}), 200
         else:
             return jsonify({"status": "error", "message": f"{filename} not found"}), 404
