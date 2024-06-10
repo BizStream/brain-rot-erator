@@ -1,4 +1,4 @@
-import { sortedVideos } from "../clips/utils";
+import { sortedVideos } from "../utils";
 
 export async function processClips(title, clipLength, file, adFill) {
   const formData = new FormData();
@@ -41,12 +41,10 @@ export async function fetchVideoUrls() {
 }
 
 export async function delete_clip(filepath, isDownloadLink = false) {
-  console.log("filepath: ", filepath);
   let filename = filepath.split("\\").pop();
   if (isDownloadLink) {
     filename = filepath.split("/").pop();
   }
-  console.log("filename: ", filename);
   try {
     const response = await fetch(process.env.NEXT_PUBLIC_PATH_TO_DELETE_CLIP, {
       method: "POST",

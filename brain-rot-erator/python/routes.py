@@ -3,7 +3,6 @@ from python import python, socketio
 from python.video_processing import process_video, process_video_no_ad
 from python.config import CLIPS_FOLDER
 import os
-from flask_socketio import emit
 
 
 @python.route("/api/clips", methods=["POST"])

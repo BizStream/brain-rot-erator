@@ -1,4 +1,4 @@
-import { delete_clip } from "../lib/pythonService";
+import { delete_clip } from "./lib/pythonService";
 
 const extractTime = (videoUrls) => {
   const keys = Object.keys(localStorage);
@@ -25,7 +25,6 @@ const extractTime = (videoUrls) => {
 
 const sortedVideos = (videoUrls) => {
   const clipTimes = extractTime(videoUrls);
-  console.log("clipTimes", clipTimes);
 
   return videoUrls
     .map((url, index) => ({ url, time: new Date(clipTimes[index]) })) //temp array that stores url and time
@@ -53,7 +52,6 @@ const checkAndRemoveExpiredClips = () => {
           console.log(`Removed expired clip from localStorage: ${key}`);
 
           delete_clip(clip.clipPath, false);
-          //TODO: update setVideos to remove the clip from the list
         }
       }
     } catch (error) {

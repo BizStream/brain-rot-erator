@@ -5,19 +5,9 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { CircularProgress } from "@mui/material";
 import io from "socket.io-client";
-import { checkAndRemoveExpiredClips, deleteClipFromLocal } from "./utils";
+import { deleteClipFromLocal } from "../utils";
 import { fetchVideoUrls, delete_clip } from "../lib/pythonService";
-
-// custome hook to check for expired clips
-const useExpiredClipsCheck = () => {
-  useEffect(() => {
-    const interval = setInterval(() => {
-      checkAndRemoveExpiredClips();
-    }, 60000); // check every minute
-
-    return () => clearInterval(interval);
-  }, []);
-};
+import useExpiredClipsCheck from "../hooks/useExpiredClipsCheck.js";
 
 export default function ClipsPage() {
   useExpiredClipsCheck();
@@ -26,22 +16,17 @@ export default function ClipsPage() {
   const [selected, setSelected] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  //TODO: call the hook, requires a callback function
   useEffect(() => {
-    const socket = io("http://localhost:5000/");
+    const socket = io(process.env.NEXT_PUBLIC_PATH_TO_SOCKET);
 
     socket.on("file_deleted", (data) => {
       console.log("file_deleted", data);
 
-      //TODO: update setVideos to remove the clip from the list. What does data return?
-      // setVideos((prevVideos) => prevVideos.filter((video) => video !== data));
-
       toast.error(
-        "A clip has been deleted. Please refresh the page to see the change.",
+        "A clip has been deleted. Refresh the page to see the change.",
         { duration: Infinity }
       );
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
     });
 
     return () => {
@@ -128,7 +113,6 @@ export default function ClipsPage() {
 
       await delete_clip(videoUrl, true);
       deleteClipFromLocal(videoUrl);
-      //TODO: see if this is necessary
       setVideos((prevVideos) =>
         prevVideos.filter((video) => video !== videoUrl)
       );
@@ -148,24 +132,22 @@ export default function ClipsPage() {
     <div className="h-screen max-w-screen w-100 m-auto">
       <Toaster />
       <div className="w-1/2 m-auto">
-        <div className="flex flex-row justify-center p-10">
+        <div className="flex flex-row justify-between p-10 sticky top-0 ">
           <button
             type="button"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center z-50"
             onClick={(e) => handleReturnClick(e)}
           >
             Return
           </button>
 
-          <div className="flex">
-            <button
-              type="button"
-              className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center w-24 fixed top-8 right-[30%] z-50"
-              onClick={() => handleDownloadSelected()}
-            >
-              Download selected
-            </button>
-          </div>
+          <button
+            type="button"
+            className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center w-24 right-[30%] z-50"
+            onClick={() => handleDownloadSelected()}
+          >
+            Download selected
+          </button>
         </div>
 
         <div className="flex flex-col items-center gap-5">

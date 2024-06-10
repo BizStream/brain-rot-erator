@@ -4,6 +4,8 @@ from werkzeug.utils import secure_filename
 from python.config import UPLOAD_FOLDER, CLIPS_FOLDER, MAX_AGE
 from datetime import datetime
 from pytz import timezone
+from progress_bar import MyBarLogger
+from python import socketio
 
 
 def process_video(title, clipLength, file, adFill):
@@ -128,6 +130,7 @@ def process_single_clip(
     clipSegmentNum,
     clipCurrentStart,
 ):
+    logger = MyBarLogger()
     clipEnd = clipCurrentStart + int(clipLength)
     if clipEnd > movie_duration:
         clipEnd = movie_duration
@@ -142,6 +145,7 @@ def process_single_clip(
         audio_codec="aac",
         temp_audiofile="temp-audio.m4a",
         remove_temp=True,
+        logger=logger,
     )
 
     # Get the current time in Eastern Time (ET)
