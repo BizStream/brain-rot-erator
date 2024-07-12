@@ -173,7 +173,7 @@ def process_single_clip(
 
     # Create the text clip (caption)
     caption = TextClip(
-        f"Clip Number {clipSegmentNum}", fontsize=30, color="white", bg_color="black"
+        f"{title} {clipSegmentNum}", fontsize=40, color="white", bg_color=(0, 0, 0, 128)
     )
     caption = caption.set_duration(myClip.duration)
 

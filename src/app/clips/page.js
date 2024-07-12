@@ -135,7 +135,7 @@ export default function ClipsPage() {
         <div className="flex flex-row justify-between p-10 sticky top-0 ">
           <button
             type="button"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center z-50"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded self-center z-50 mr-2"
             onClick={(e) => handleReturnClick(e)}
           >
             Return
@@ -143,7 +143,7 @@ export default function ClipsPage() {
 
           <button
             type="button"
-            className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center w-24 right-[30%] z-50"
+            className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-2 rounded self-center w-24 right-[30%] z-50 ml-2"
             onClick={() => handleDownloadSelected()}
           >
             Download selected
