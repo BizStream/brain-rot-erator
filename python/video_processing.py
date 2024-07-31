@@ -173,7 +173,7 @@ def process_single_clip(
 
     # Create the text clip (caption)
     caption = TextClip(
-        f"{title} {clipSegmentNum}", fontsize=40, color="white", bg_color=(0, 0, 0, 128)
+        f"{title} {clipSegmentNum}", fontsize=40, color="white", bg_color="black"
     )
     caption = caption.set_duration(myClip.duration)
 
@@ -233,7 +233,7 @@ def process_single_clip(
             "clipName": new_title,
             "clipPath": new_output_video_path,
             "segment": clipSegmentNum,
-            "hasAdfill": False,
+            "hasAdfill": extended_adFill is not None,
             "clipLength": myClip.duration,
             "createdAt": write_time,
             "expiresAt": expires_at,
