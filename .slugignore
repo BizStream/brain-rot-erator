@@ -8,6 +8,5 @@
 !requirements.txt
 !Procfile
 !runtime.txt
-!venv/
 !run.py
 !progress_bar.py

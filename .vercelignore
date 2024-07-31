@@ -1,0 +1,10 @@
+# Ignore all Python files and directories
+
+_.py
+_.pyc
+**pycache**/
+venv/
+python/
+requirements.txt
+Procfile
+runtime.txt
