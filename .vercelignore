@@ -7,3 +7,6 @@ venv/
 requirements.txt
 Procfile
 runtime.txt
+test_scripts/
+.next/
+coverage/
