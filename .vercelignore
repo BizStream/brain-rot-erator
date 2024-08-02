@@ -1,0 +1,14 @@
+# Ignore all Python files and directories
+
+_.py
+_.pyc
+**pycache**/
+venv/
+requirements.txt
+Procfile
+runtime.txt
+test_scripts/
+.next/
+coverage/
+node_modules
+jest.config.js
