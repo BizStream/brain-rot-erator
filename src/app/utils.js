@@ -1,4 +1,4 @@
-import { delete_clip } from "./lib/pythonService";
+import { delete_clip } from "./services/pythonService";
 
 const extractTime = (videoUrls) => {
   const keys = Object.keys(localStorage);

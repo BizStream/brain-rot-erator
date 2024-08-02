@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { CircularProgress } from "@mui/material";
 import io from "socket.io-client";
 import { deleteClipFromLocal } from "../utils";
-import { fetchVideoUrls, delete_clip } from "../lib/pythonService";
+import { fetchVideoUrls, delete_clip } from "../services/pythonService";
 import useExpiredClipsCheck from "../hooks/useExpiredClipsCheck.js";
 
 export default function ClipsPage() {

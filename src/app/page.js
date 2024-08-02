@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { processClips } from "./lib/pythonService";
+import { processClips } from "./services/pythonService";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { CircularProgress, LinearProgress } from "@mui/material";

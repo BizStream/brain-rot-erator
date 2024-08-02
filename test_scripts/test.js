@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Home from "../src/app/page.js"; // Adjust the path to where Home component is located
-import { processClips } from "../src/app/lib/pythonService"; // Ensure the path is correct
+import { processClips } from "../src/app/services/pythonService.js"; // Ensure the path is correct
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import "@testing-library/jest-dom";
