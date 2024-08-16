@@ -1,0 +1,12 @@
+# Ignore everything except the python folder and necessary files
+
+-
+
+# Unignore specific files and folders needed for the Flask app
+
+!python/
+!requirements.txt
+!Procfile
+!runtime.txt
+!run.py
+!progress_bar.py

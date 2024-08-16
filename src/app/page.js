@@ -33,6 +33,25 @@ export default function Home() {
     }
   }, [progressData]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY;
+      const backgroundContainer = document.querySelector(
+        ".background-container"
+      );
+      if (backgroundContainer) {
+        backgroundContainer.style.backgroundPositionY = -(scrolled * 2) + "px";
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (title === "" || file === "") {
@@ -95,19 +114,16 @@ export default function Home() {
     }
   };
 
-  window.addEventListener("scroll", function () {
-    const scrolled = window.scrollY;
-    document.querySelector(".background-container").style.backgroundPositionY =
-      -(scrolled * 2) + "px";
-  });
-
   return (
     <div className="h-screen">
       <Toaster />
-      <div className="background-container w-1/2 max-h-[200vh] h-[200vh] mx-auto justify-center">
+      <div
+        className="background-container w-1/2 max-h-[200vh] h-[200vh] mx-auto justify-center bg-position-y-0"
+        style={{ backgroundPositionY: "0px" }}
+      >
         <div className="flex h-[100vh] mx-auto justify-center items-center">
           <div className="backdrop flex flex-col gap-10">
-            <p className="flex justify-center my-4 font-bold text-xl">
+            <p className="flex justify-center font-bold text-xl">
               Brain Rotinator
             </p>
             <form
@@ -119,7 +135,7 @@ export default function Home() {
                   type="button"
                   onClick={() => handleAttachClick1()}
                   data-testid="attachMovie"
-                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-5 rounded flex w-fit"
                 >
                   Attach movie
                 </button>
@@ -139,7 +155,7 @@ export default function Home() {
               </div>
               {isAttached && (
                 <div className="flex flex-col space-y-4">
-                  <div className="flex gap-2 items-center">
+                  <div className="flex gap-[1rem] items-center">
                     <input
                       type="text"
                       maxLength={12}
@@ -170,7 +186,7 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => handleAttachClick2()}
-                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded flex w-fit"
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-5 rounded flex w-fit"
                     >
                       Attach ad-fill
                     </button>
