@@ -18,7 +18,7 @@ decorator==4.4.2
 dxcam==0.0.5
 ffmpeg==1.4
 Flask==3.0.3
-Flask-Cors==4.0.1
+Flask-Cors==5.0.0
 Flask-SocketIO==5.3.6
 h11==0.14.0
 idna==3.7
