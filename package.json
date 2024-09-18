@@ -18,7 +18,7 @@
     "@mui/material": "^5.15.19",
     "devextreme": "^23.2.6",
     "devextreme-react": "^23.2.6",
-    "next": "14.2.3",
+    "next": "14.2.12",
     "next-router-mock": "^0.9.13",
     "react": "^18",
     "react-dom": "^18",
